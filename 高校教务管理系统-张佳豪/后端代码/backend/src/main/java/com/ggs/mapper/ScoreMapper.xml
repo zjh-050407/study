@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.ScoreMapper">
+
+    <resultMap id="scoreMap" type="com.ggs.pojo.Score">
+        <id property="scoreId" column="score_id"/>
+        <result property="sid" column="sid"/>
+        <result property="courseId" column="course_id"/>
+        <result property="usual" column="usual"/>
+        <result property="mid" column="mid"/>
+        <result property="finalScore" column="final"/>
+        <result property="total" column="total"/>
+        <result property="gp" column="gp"/>
+        <result property="studentName" column="student_name"/>
+        <result property="courseName" column="course_name"/>
+        <result property="clazzName" column="clazz_name"/>
+    </resultMap>
+
+    <select id="listScore" resultMap="scoreMap">
+        SELECT s.score_id, s.sid, s.course_id, s.usual, s.mid, s.final, s.total, s.gp,
+               st.name AS student_name, c.name AS course_name, cl.name AS clazz_name
+        FROM score s
+        LEFT JOIN student st ON s.sid = st.sid
+        LEFT JOIN course c ON s.course_id = c.course_id
+        LEFT JOIN clazz cl ON st.cid = cl.cid
+    </select>
+
+    <select id="listByStudent" resultMap="scoreMap">
+        SELECT s.score_id, s.sid, s.course_id, s.usual, s.mid, s.final, s.total, s.gp,
+               st.name AS student_name, c.name AS course_name, cl.name AS clazz_name
+        FROM score s
+        LEFT JOIN student st ON s.sid = st.sid
+        LEFT JOIN course c ON s.course_id = c.course_id
+        LEFT JOIN clazz cl ON st.cid = cl.cid
+        WHERE s.sid = #{sid}
+    </select>
+
+    <select id="listByCourse" resultMap="scoreMap">
+        SELECT s.score_id, s.sid, s.course_id, s.usual, s.mid, s.final, s.total, s.gp,
+               st.name AS student_name, c.name AS course_name, cl.name AS clazz_name
+        FROM score s
+        LEFT JOIN student st ON s.sid = st.sid
+        LEFT JOIN course c ON s.course_id = c.course_id
+        LEFT JOIN clazz cl ON st.cid = cl.cid
+        WHERE s.course_id = #{courseId}
+    </select>
+
+    <insert id="add" useGeneratedKeys="true" keyProperty="scoreId">
+        INSERT INTO score (sid, course_id, usual, mid, final, total, gp)
+        VALUES (#{sid}, #{courseId}, #{usual}, #{mid}, #{finalScore},
+                #{total}, #{gp})
+    </insert>
+
+    <update id="update">
+        UPDATE score
+        SET sid = #{sid}, course_id = #{courseId}, usual = #{usual}, mid = #{mid}, final = #{finalScore},
+            total = #{total}, gp = #{gp}
+        WHERE score_id = #{scoreId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM score WHERE score_id = #{scoreId}
+    </delete>
+
+    <select id="avgByCourse" resultType="map">
+        SELECT c.name AS name, ROUND(AVG(s.total), 1) AS value
+        FROM score s
+        LEFT JOIN course c ON s.course_id = c.course_id
+        GROUP BY s.course_id, c.name
+    </select>
+
+    <select id="countByGrade" resultType="map">
+        SELECT
+            CASE
+                WHEN total &gt;= 90 THEN '优秀'
+                WHEN total &gt;= 80 THEN '良好'
+                WHEN total &gt;= 60 THEN '及格'
+                ELSE '不及格'
+            END AS name,
+            COUNT(*) AS value
+        FROM score
+        GROUP BY
+            CASE
+                WHEN total &gt;= 90 THEN '优秀'
+                WHEN total &gt;= 80 THEN '良好'
+                WHEN total &gt;= 60 THEN '及格'
+                ELSE '不及格'
+            END
+    </select>
+
+</mapper>

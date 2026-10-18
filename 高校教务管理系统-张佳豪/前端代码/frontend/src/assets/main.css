@@ -1,0 +1,109 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  width: 100%;
+  height: 100%;
+}
+
+/* ========== 玻璃淡蓝设计系统 ========== */
+:root {
+  /* 玻璃质感 */
+  --glass-bg: rgba(255, 255, 255, 0.52);
+  --glass-bg-strong: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(140, 190, 255, 0.28);
+  --glass-border-light: rgba(140, 190, 255, 0.15);
+  --glass-shadow: 0 8px 32px rgba(31, 110, 200, 0.07);
+  --glass-shadow-sm: 0 2px 12px rgba(31, 110, 200, 0.05);
+
+  /* 蓝色主色阶 */
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #6da8f5;
+  --blue-500: #4a90e2;
+  --blue-600: #357abd;
+  --blue-700: #2a6299;
+
+  /* 语义色 */
+  --primary: var(--blue-500);
+  --primary-light: var(--blue-400);
+  --primary-lighter: var(--blue-200);
+  --bg-gradient-start: #eef6ff;
+  --bg-gradient-end: #e0efff;
+  --sidebar-bg: rgba(220, 240, 255, 0.6);
+  --text-primary: #1a3a5c;
+  --text-secondary: #5a7a9c;
+  --text-muted: #8aa4c0;
+
+  /*  backdrop blur */
+  --blur-sm: blur(8px);
+  --blur-md: blur(14px);
+  --blur-lg: blur(24px);
+}
+
+body {
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--text-primary);
+}
+
+/* 全局滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(140, 190, 255, 0.35);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 190, 255, 0.55);
+}
+
+/* ========== Neumorphism 新增按钮 ========== */
+.btn-neu-add {
+  width: 9em;
+  height: 3em;
+  border-radius: 30em;
+  font-size: 15px;
+  font-family: inherit;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  box-shadow: 4px 4px 10px rgba(74, 144, 226, 0.15),
+              -4px -4px 10px rgba(255, 255, 255, 0.8);
+  background: rgba(210, 230, 255, 0.5);
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.4s ease;
+}
+
+.btn-neu-add::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  border-radius: 30em;
+  background: linear-gradient(to right, #a0cfff 0%, #c8dfff 100%);
+  transition: width 0.5s ease;
+  z-index: -1;
+}
+
+.btn-neu-add:hover::before {
+  width: 100%;
+}
+
+.btn-neu-add:hover {
+  color: #1a3a5c;
+}

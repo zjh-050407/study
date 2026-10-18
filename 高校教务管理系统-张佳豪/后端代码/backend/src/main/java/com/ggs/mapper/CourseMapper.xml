@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.CourseMapper">
+
+    <resultMap id="courseMap" type="com.ggs.pojo.Course">
+        <id property="courseId" column="course_id"/>
+        <result property="name" column="name"/>
+        <result property="credit" column="credit"/>
+        <result property="hours" column="hours"/>
+    </resultMap>
+
+    <select id="listCourse" resultMap="courseMap">
+        SELECT course_id, name, credit, hours FROM course
+    </select>
+
+    <select id="getById" resultMap="courseMap">
+        SELECT course_id, name, credit, hours FROM course WHERE course_id = #{courseId}
+    </select>
+
+    <insert id="add" useGeneratedKeys="true" keyProperty="courseId">
+        INSERT INTO course (name, credit, hours) VALUES (#{name}, #{credit}, #{hours})
+    </insert>
+
+    <update id="update">
+        UPDATE course SET name = #{name}, credit = #{credit}, hours = #{hours} WHERE course_id = #{courseId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM course WHERE course_id = #{courseId}
+    </delete>
+
+</mapper>

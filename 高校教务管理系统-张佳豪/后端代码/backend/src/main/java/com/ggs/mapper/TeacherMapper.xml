@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.TeacherMapper">
+
+    <resultMap id="teacherMap" type="com.ggs.pojo.Teacher">
+        <id property="tid" column="tid"/>
+        <result property="name" column="name"/>
+        <result property="age" column="age"/>
+        <result property="title" column="title"/>
+        <result property="department" column="department"/>
+    </resultMap>
+
+    <select id="listTeacher" resultMap="teacherMap">
+        SELECT tid, name, age, title, department FROM teacher
+    </select>
+
+    <select id="getTeacherById" resultMap="teacherMap">
+        SELECT tid, name, age, title, department FROM teacher WHERE tid = #{tid}
+    </select>
+
+    <insert id="addTeacher">
+        INSERT INTO teacher (tid, name, age, title, department)
+        VALUES ((SELECT COALESCE(MAX(tid), 0) + 1 FROM teacher tmp), #{name}, #{age}, #{title}, #{department})
+    </insert>
+
+    <update id="updateTeacher">
+        UPDATE teacher SET name = #{name}, age = #{age}, title = #{title}, department = #{department} WHERE tid = #{tid}
+    </update>
+
+    <delete id="deleteTeacher">
+        DELETE FROM teacher WHERE tid = #{tid}
+    </delete>
+
+</mapper>
