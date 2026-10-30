@@ -1,0 +1,117 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  width: 100%;
+  height: 100%;
+}
+
+/* ========== Claude Code / Anthropic 浅色设计体系（暖白 · 墨色 · 陶土橙） ========== */
+:root {
+  /* 字体栈（Source Serif 4 / JetBrains Mono 由 @fontsource 打包提供） */
+  --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', 'SimSun', '宋体', serif;
+  --font-mono: 'JetBrains Mono', Consolas, 'Courier New', 'NSimSun', monospace;
+  --font-sans: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  /* 表面与边框（变量名保留兼容，值为暖色实色） */
+  --glass-bg: #ffffff;
+  --glass-bg-strong: #ffffff;
+  --glass-border: #e8e5da;
+  --glass-border-light: #efede4;
+  --glass-shadow: 0 2px 12px rgba(61, 57, 41, 0.07);
+  --glass-shadow-sm: 0 1px 4px rgba(61, 57, 41, 0.05);
+
+  /* 暖色调阶（原 --blue-* 变量名保留，值改为陶土橙系，全站引用自动统一） */
+  --blue-50: #fbf1ec;
+  --blue-100: #f5e3da;
+  --blue-200: #ecc9b8;
+  --blue-300: #dfa98d;
+  --blue-400: #d98a66;
+  --blue-500: #d97757;
+  --blue-600: #c05f3e;
+  --blue-700: #a34d31;
+
+  /* 语义色 */
+  --primary: var(--blue-500);
+  --primary-light: var(--blue-400);
+  --primary-lighter: var(--blue-200);
+  --bg-gradient-start: #faf9f5;
+  --bg-gradient-end: #f5f4ee;
+  --sidebar-bg: #ffffff;
+  --text-primary: #3d3929;
+  --text-secondary: #6e6a5b;
+  --text-muted: #9c9687;
+
+  /* 无模糊效果 */
+  --blur-sm: none;
+  --blur-md: none;
+  --blur-lg: none;
+}
+
+/* Element Plus 主色统一为陶土橙（:root 优先级需与 EP 定义保持一致才可覆盖） */
+:root {
+  --el-color-primary: #d97757;
+  --el-color-primary-light-3: #e09a82;
+  --el-color-primary-light-5: #eab9a7;
+  --el-color-primary-light-7: #f2d3c7;
+  --el-color-primary-light-8: #f7e3db;
+  --el-color-primary-light-9: #fbf1ec;
+  --el-color-primary-dark-2: #c05f3e;
+  --el-border-color: #e8e5da;
+  --el-border-color-light: #efede4;
+  --el-border-color-lighter: #f3f1e9;
+  --el-text-color-primary: #3d3929;
+  --el-text-color-regular: #6e6a5b;
+  --el-fill-color-light: #faf9f5;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background-color: var(--bg-gradient-start);
+}
+
+/* 标题类统一衬线（含中文宋体混排） */
+h1, h2, h3, .el-dialog__title {
+  font-family: var(--font-serif);
+}
+
+/* 等宽点缀样式（编号/时间/代码类内容可直接使用） */
+
+/* 全局滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cfcab9;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9c9687;
+}
+
+/* ========== 新增按钮：陶土橙实色主按钮 ========== */
+.btn-neu-add {
+  height: 32px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  border: none;
+  background: var(--blue-500);
+  color: #ffffff;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0 16px;
+  transition: background 0.2s ease;
+}
+
+.btn-neu-add:hover {
+  background: var(--blue-600);
+}

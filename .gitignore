@@ -1,0 +1,29 @@
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+
+# 前端 / Node
+node_modules/
+dist/
+*.local
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE / 编辑器
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# 系统 / 日志
+.DS_Store
+Thumbs.db
+*.log
+
+# 含其他成员信息的分工表，默认不传
+组队详情.xlsx

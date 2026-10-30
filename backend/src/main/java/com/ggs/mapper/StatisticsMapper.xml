@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.StatisticsMapper">
+
+    <select id="countStudent" resultType="int">
+        SELECT COUNT(*) FROM student
+    </select>
+
+    <select id="countTeacher" resultType="int">
+        SELECT COUNT(*) FROM teacher
+    </select>
+
+    <select id="countCourse" resultType="int">
+        SELECT COUNT(*) FROM course
+    </select>
+
+    <select id="countClazz" resultType="int">
+        SELECT COUNT(*) FROM clazz
+    </select>
+
+    <select id="deptStudentCount" resultType="map">
+        SELECT d.name AS name, COUNT(s.sid) AS value
+        FROM department d
+        LEFT JOIN clazz c ON d.did = c.did
+        LEFT JOIN student s ON c.cid = s.cid
+        GROUP BY d.did, d.name
+        ORDER BY value DESC
+    </select>
+
+    <select id="genderDistribution" resultType="map">
+        SELECT sex AS name, COUNT(*) AS value
+        FROM student
+        WHERE sex IS NOT NULL
+        GROUP BY sex
+    </select>
+
+    <select id="ageDistribution" resultType="map">
+        SELECT age AS name, COUNT(*) AS value
+        FROM student
+        WHERE age IS NOT NULL
+        GROUP BY age
+        ORDER BY age
+    </select>
+
+    <select id="avgScoreByCourse" resultType="map">
+        SELECT c.name AS name, ROUND(AVG(s.total), 1) AS value
+        FROM score s
+        LEFT JOIN course c ON s.course_id = c.course_id
+        GROUP BY s.course_id, c.name
+        ORDER BY value DESC
+        LIMIT 5
+    </select>
+
+    <select id="gradeDistribution" resultType="map">
+        SELECT
+            CASE
+                WHEN total >= 90 THEN '优秀'
+                WHEN total >= 80 THEN '良好'
+                WHEN total >= 60 THEN '及格'
+                ELSE '不及格'
+            END AS name,
+            COUNT(*) AS value
+        FROM score
+        GROUP BY
+            CASE
+                WHEN total >= 90 THEN '优秀'
+                WHEN total >= 80 THEN '良好'
+                WHEN total >= 60 THEN '及格'
+                ELSE '不及格'
+            END
+    </select>
+
+    <select id="scheduleHeatmap" resultType="map">
+        SELECT week_day AS weekDay, section AS section, COUNT(*) AS value
+        FROM course_arrange
+        GROUP BY week_day, section
+        ORDER BY week_day, section
+    </select>
+
+    <select id="recentLogs" resultType="map">
+        SELECT username, operation, create_time AS createTime
+        FROM operation_log
+        ORDER BY create_time DESC
+        LIMIT 10
+    </select>
+
+</mapper>

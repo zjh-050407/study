@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.ClazzMapper">
+
+    <resultMap id="clazzMap" type="com.ggs.pojo.Clazz">
+        <id property="cid" column="cid"/>
+        <result property="name" column="name"/>
+        <result property="did" column="did"/>
+        <result property="tid" column="tid"/>
+        <result property="capacity" column="capacity"/>
+        <result property="deptName" column="dept_name"/>
+        <result property="teacherName" column="teacher_name"/>
+    </resultMap>
+
+    <select id="listClazz" resultMap="clazzMap">
+        SELECT c.cid, c.name, c.did, c.tid, c.capacity,
+               d.name AS dept_name, t.name AS teacher_name
+        FROM clazz c
+        LEFT JOIN department d ON c.did = d.did
+        LEFT JOIN teacher t ON c.tid = t.tid
+    </select>
+
+    <select id="getById" resultMap="clazzMap">
+        SELECT c.cid, c.name, c.did, c.tid, c.capacity,
+               d.name AS dept_name, t.name AS teacher_name
+        FROM clazz c
+        LEFT JOIN department d ON c.did = d.did
+        LEFT JOIN teacher t ON c.tid = t.tid
+        WHERE c.cid = #{cid}
+    </select>
+
+    <insert id="add" useGeneratedKeys="true" keyProperty="cid">
+        INSERT INTO clazz (name, did, tid, capacity) VALUES (#{name}, #{did}, #{tid}, #{capacity})
+    </insert>
+
+    <update id="update">
+        UPDATE clazz SET name = #{name}, did = #{did}, tid = #{tid}, capacity = #{capacity} WHERE cid = #{cid}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM clazz WHERE cid = #{cid}
+    </delete>
+
+    <select id="listByDept" resultMap="clazzMap">
+        SELECT c.cid, c.name, c.did, c.tid, c.capacity,
+               d.name AS dept_name, t.name AS teacher_name
+        FROM clazz c
+        LEFT JOIN department d ON c.did = d.did
+        LEFT JOIN teacher t ON c.tid = t.tid
+        WHERE c.did = #{did}
+    </select>
+
+    <select id="countByTeacher" resultType="int">
+        SELECT COUNT(*) FROM clazz WHERE tid = #{tid}
+    </select>
+
+</mapper>

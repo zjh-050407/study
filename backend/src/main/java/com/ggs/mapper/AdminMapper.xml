@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.AdminMapper">
+
+    <resultMap id="adminMap" type="com.ggs.pojo.Admin">
+        <id property="uid" column="uid"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="avatar" column="avatar"/>
+        <result property="role" column="role"/>
+    </resultMap>
+
+    <select id="login" resultMap="adminMap">
+        SELECT uid, username, password, avatar, role FROM admin
+        WHERE username = #{username} AND password = #{password}
+    </select>
+
+    <update id="updateAvatar">
+        UPDATE admin SET avatar = #{avatar} WHERE uid = #{uid}
+    </update>
+
+    <select id="getById" resultMap="adminMap">
+        SELECT uid, username, password, avatar, role FROM admin WHERE uid = #{uid}
+    </select>
+
+    <update id="updatePassword">
+        UPDATE admin SET password = #{password} WHERE uid = #{uid}
+    </update>
+
+    <select id="findByUsername" resultMap="adminMap">
+        SELECT uid, username, password, avatar, role FROM admin WHERE username = #{username}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="uid">
+        INSERT INTO admin (username, password, avatar)
+        VALUES (#{username}, #{password}, #{avatar})
+    </insert>
+
+    <select id="selectMaxUid" resultType="java.lang.Long">
+        SELECT COALESCE(MAX(uid), 0) + 1 FROM admin
+    </select>
+
+    <insert id="insertNextUid">
+        INSERT INTO admin (uid, username, password, avatar, role)
+        VALUES ((SELECT COALESCE(MAX(uid), 0) + 1 FROM admin tmp), #{username}, #{password}, #{avatar}, #{role})
+    </insert>
+
+</mapper>

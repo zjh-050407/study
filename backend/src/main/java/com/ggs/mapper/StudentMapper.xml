@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.StudentMapper">
+
+    <resultMap id="studentMap" type="com.ggs.pojo.Student">
+        <id property="sid" column="sid"/>
+        <result property="name" column="name"/>
+        <result property="age" column="age"/>
+        <result property="sex" column="sex"/>
+        <result property="cid" column="cid"/>
+        <result property="clazzName" column="clazz_name"/>
+        <result property="deptName" column="dept_name"/>
+    </resultMap>
+
+    <select id="listStu" resultMap="studentMap">
+        SELECT s.sid, s.name, s.age, s.sex, s.cid, c.name AS clazz_name, d.name AS dept_name
+        FROM student s
+        LEFT JOIN clazz c ON s.cid = c.cid
+        LEFT JOIN department d ON c.did = d.did
+    </select>
+
+    <delete id="delete">
+        DELETE
+        FROM student
+        WHERE sid = #{sid}
+    </delete>
+
+    <select id="getStuByAge" resultMap="studentMap">
+        SELECT s.sid, s.name, s.age, s.sex, s.cid, c.name AS clazz_name, d.name AS dept_name
+        FROM student s
+        LEFT JOIN clazz c ON s.cid = c.cid
+        LEFT JOIN department d ON c.did = d.did
+        WHERE s.age = #{age}
+    </select>
+
+    <update id="updateAge">
+        UPDATE student
+        SET age = #{age}
+        WHERE sid = #{sid}
+    </update>
+
+    <insert id="addStu">
+        INSERT INTO student (name, age, sex, cid)
+        VALUES (#{name}, #{age}, #{sex}, #{cid})
+    </insert>
+
+    <update id="updateStu">
+        UPDATE student
+        SET name = #{name},
+            age  = #{age},
+            sex  = #{sex},
+            cid  = #{cid}
+        WHERE sid = #{sid}
+    </update>
+
+    <select id="getStu" resultMap="studentMap">
+        SELECT s.sid, s.name, s.age, s.sex, s.cid, c.name AS clazz_name, d.name AS dept_name
+        FROM student s
+        LEFT JOIN clazz c ON s.cid = c.cid
+        LEFT JOIN department d ON c.did = d.did
+        <where>
+            <if test="name != null and name != ''">
+                AND s.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="sex != null and sex != ''">
+                AND s.sex = #{sex}
+            </if>
+            <if test="cid != null">
+                AND s.cid = #{cid}
+            </if>
+            <if test="age != null">
+                AND s.age = #{age}
+            </if>
+        </where>
+    </select>
+
+    <sql id="studentWhere">
+        <where>
+            <if test="name != null and name != ''">
+                AND s.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="cname != null and cname != ''">
+                AND c.name LIKE CONCAT('%', #{cname}, '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="listStuByPage" resultMap="studentMap">
+        SELECT s.sid, s.name, s.age, s.sex, s.cid, c.name AS clazz_name, d.name AS dept_name
+        FROM student s
+        LEFT JOIN clazz c ON s.cid = c.cid
+        LEFT JOIN department d ON c.did = d.did
+        <include refid="studentWhere"/>
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countStu" resultType="int">
+        SELECT COUNT(*)
+        FROM student s
+        LEFT JOIN clazz c ON s.cid = c.cid
+        <include refid="studentWhere"/>
+    </select>
+
+    <select id="countByClazz" resultType="int">
+        SELECT COUNT(*) FROM student WHERE cid = #{cid}
+    </select>
+
+</mapper>
