@@ -8,30 +8,34 @@
     <resultMap id="arrangeMap" type="com.ggs.pojo.CourseArrange">
         <id property="arrangeId" column="arrange_id"/>
         <result property="courseId" column="course_id"/>
+        <result property="semesterId" column="semester_id"/>
         <result property="tid" column="tid"/>
         <result property="classroom" column="classroom"/>
         <result property="weekDay" column="week_day"/>
         <result property="section" column="section"/>
         <result property="courseName" column="course_name"/>
         <result property="teacherName" column="teacher_name"/>
+        <result property="semesterName" column="semester_name"/>
     </resultMap>
 
     <select id="listArrange" resultMap="arrangeMap">
-        SELECT a.arrange_id, a.course_id, a.tid, a.classroom, a.week_day, a.section,
-               c.name AS course_name, t.name AS teacher_name
+        SELECT a.arrange_id, a.course_id, a.semester_id, a.tid, a.classroom, a.week_day, a.section,
+               c.name AS course_name, t.name AS teacher_name, sem.name AS semester_name
         FROM course_arrange a
         LEFT JOIN course c ON a.course_id = c.course_id
         LEFT JOIN teacher t ON a.tid = t.tid
+        LEFT JOIN semester sem ON sem.id = a.semester_id
     </select>
 
     <insert id="add" useGeneratedKeys="true" keyProperty="arrangeId">
-        INSERT INTO course_arrange (course_id, tid, classroom, week_day, section)
-        VALUES (#{courseId}, #{tid}, #{classroom}, #{weekDay}, #{section})
+        INSERT INTO course_arrange (course_id, semester_id, tid, classroom, week_day, section)
+        VALUES (#{courseId}, #{semesterId}, #{tid}, #{classroom}, #{weekDay}, #{section})
     </insert>
 
     <update id="update">
         UPDATE course_arrange
         SET course_id = #{courseId},
+            semester_id = #{semesterId},
             tid = #{tid},
             classroom = #{classroom},
             week_day = #{weekDay},
@@ -44,20 +48,22 @@
     </delete>
 
     <select id="listByTeacher" resultMap="arrangeMap">
-        SELECT a.arrange_id, a.course_id, a.tid, a.classroom, a.week_day, a.section,
-               c.name AS course_name, t.name AS teacher_name
+        SELECT a.arrange_id, a.course_id, a.semester_id, a.tid, a.classroom, a.week_day, a.section,
+               c.name AS course_name, t.name AS teacher_name, sem.name AS semester_name
         FROM course_arrange a
         LEFT JOIN course c ON a.course_id = c.course_id
         LEFT JOIN teacher t ON a.tid = t.tid
+        LEFT JOIN semester sem ON sem.id = a.semester_id
         WHERE a.tid = #{tid}
     </select>
 
     <select id="listByCourse" resultMap="arrangeMap">
-        SELECT a.arrange_id, a.course_id, a.tid, a.classroom, a.week_day, a.section,
-               c.name AS course_name, t.name AS teacher_name
+        SELECT a.arrange_id, a.course_id, a.semester_id, a.tid, a.classroom, a.week_day, a.section,
+               c.name AS course_name, t.name AS teacher_name, sem.name AS semester_name
         FROM course_arrange a
         LEFT JOIN course c ON a.course_id = c.course_id
         LEFT JOIN teacher t ON a.tid = t.tid
+        LEFT JOIN semester sem ON sem.id = a.semester_id
         WHERE a.course_id = #{courseId}
     </select>
 

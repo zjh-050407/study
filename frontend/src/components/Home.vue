@@ -13,7 +13,12 @@ import {
   Warning,
   Document,
   WarningFilled,
-  Bell
+  Bell,
+  Star,
+  Timer,
+  Finished,
+  Collection,
+  Switch
 } from '@element-plus/icons-vue'
 import { ref, onMounted } from "vue"
 import { ElMessage } from 'element-plus'
@@ -112,6 +117,26 @@ const handleCommand = (command) => {
               <el-menu-item index="/home/scoreWarning">
                 <el-icon><WarningFilled /></el-icon>
                 <span>成绩预警</span>
+              </el-menu-item>
+              <el-menu-item index="/home/evaluation">
+                <el-icon><Star /></el-icon>
+                <span>教学评价</span>
+              </el-menu-item>
+              <el-menu-item index="/home/examArrange" v-if="role === 'professor' || role === 'admin'">
+                <el-icon><Timer /></el-icon>
+                <span>考务排考</span>
+              </el-menu-item>
+              <el-menu-item index="/home/graduateAudit" v-if="role === 'professor' || role === 'admin'">
+                <el-icon><Finished /></el-icon>
+                <span>毕业审核</span>
+              </el-menu-item>
+              <el-menu-item index="/home/trainingPlan" v-if="role === 'professor' || role === 'admin'">
+                <el-icon><Collection /></el-icon>
+                <span>培养方案</span>
+              </el-menu-item>
+              <el-menu-item index="/home/statusChange" v-if="role === 'professor' || role === 'admin'">
+                <el-icon><Switch /></el-icon>
+                <span>学籍异动</span>
               </el-menu-item>
             </el-sub-menu>
             <el-menu-item index="/home/systemInit" v-if="role === 'admin'">

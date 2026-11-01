@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class CourseArrange {
     private Integer arrangeId;
     private Integer courseId;
+    private Integer semesterId;
     private Integer tid;
     private String classroom;
     private Integer weekDay;
@@ -17,4 +18,5 @@ public class CourseArrange {
     // 关联字段
     private String courseName;
     private String teacherName;
+    private String semesterName;
 }

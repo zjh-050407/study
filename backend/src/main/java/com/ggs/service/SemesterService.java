@@ -8,6 +8,9 @@ public interface SemesterService {
 
     List<Semester> listAll();
 
+    /** 查询当前学期，无则返回 null */
+    Semester getCurrent();
+
     void add(Semester semester);
 
     void update(Semester semester);

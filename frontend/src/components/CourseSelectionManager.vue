@@ -132,6 +132,51 @@ const removeSelection = (row) => {
 
 const isSelected = (courseId) => selections.value.some(s => s.courseId === courseId)
 
+/* 退选审批 */
+const activeTab = ref('select')
+const applies = ref([])
+const appliesLoading = ref(false)
+
+const getApplies = async () => {
+  appliesLoading.value = true
+  try {
+    const result = await request.get('/selectionApply/pending')
+    if (result.data.code === 0) {
+      applies.value = result.data.data
+    }
+  } catch (err) {
+    console.error('获取退选申请失败:', err)
+  } finally {
+    appliesLoading.value = false
+  }
+}
+
+const approveApply = async (row) => {
+  const result = await request.put('/selectionApply/approve/' + row.id)
+  if (result.data.code === 0) {
+    ElMessage.success('已通过：选课记录已删除')
+    await getApplies()
+  } else {
+    ElMessage.error(result.data.message || '操作失败')
+  }
+}
+
+const rejectApply = async (row) => {
+  const result = await request.put('/selectionApply/reject/' + row.id)
+  if (result.data.code === 0) {
+    ElMessage.success('已拒绝该退选申请')
+    await getApplies()
+  } else {
+    ElMessage.error(result.data.message || '操作失败')
+  }
+}
+
+const handleTabChange = (name) => {
+  if (name === 'apply') {
+    getApplies()
+  }
+}
+
 onMounted(() => {
   const userStr = localStorage.getItem('user')
   if (userStr) {
@@ -144,7 +189,12 @@ onMounted(() => {
 })
 </script>
 <template>
-  <div class="selection-layout">
+  <div class="manager-page">
+    <el-alert class="self-tip" type="info" :closable="false" show-icon
+              title="学生自助选课入口已上线：学生可自行选课并提交退选申请，请在「退选审批」页签中审核。" />
+    <el-tabs v-model="activeTab" class="glass-tabs" @tab-change="handleTabChange">
+      <el-tab-pane label="选课管理" name="select">
+        <div class="selection-layout">
     <el-card class="glass-card stu-card">
       <template #header>
         <div class="card-header">
@@ -225,9 +275,66 @@ onMounted(() => {
         </el-table-column>
       </el-table>
     </el-card>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane label="退选审批" name="apply">
+        <el-card class="glass-card apply-card">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">退选申请（待审批）</span>
+            </div>
+          </template>
+          <el-table :data="applies" class="glass-table" v-loading="appliesLoading" empty-text="暂无待审批的退选申请">
+            <el-table-column prop="id" label="单号" width="70" align="center" />
+            <el-table-column prop="studentName" label="学生" width="100" />
+            <el-table-column prop="clazzName" label="班级" width="110" />
+            <el-table-column prop="courseName" label="课程" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="credit" label="学分" width="70" align="center" />
+            <el-table-column prop="reason" label="退选原因" min-width="160" show-overflow-tooltip>
+              <template #default="scope">{{ scope.row.reason || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="申请时间" width="170" align="center">
+              <template #default="scope">{{ scope.row.applyTime ? String(scope.row.applyTime).replace('T', ' ').slice(0, 19) : '-' }}</template>
+            </el-table-column>
+            <el-table-column label="操作" width="150" fixed="right" align="center">
+              <template #default="scope">
+                <el-button size="small" class="btn-glass-edit" @click="approveApply(scope.row)">通过</el-button>
+                <el-button size="small" class="btn-glass-danger" @click="rejectApply(scope.row)">拒绝</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 <style scoped>
+.manager-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+.manager-page .el-tabs {
+  width: 100%;
+}
+.self-tip {
+  width: 100%;
+  border-radius: 10px;
+}
+.apply-card {
+  width: 100%;
+}
+:deep(.glass-tabs .el-tabs__item.is-active) {
+  color: var(--primary);
+}
+:deep(.glass-tabs .el-tabs__active-bar) {
+  background-color: var(--primary);
+}
 .selection-layout {
   display: flex;
   gap: 16px;

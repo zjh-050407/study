@@ -71,6 +71,7 @@ const form = ref({
   usual: 0,
   mid: 0,
   finalScore: 0,
+  semesterId: 0,
 })
 
 const rules = {
@@ -80,12 +81,19 @@ const rules = {
 
 const studentOpinions = ref([])
 const courseOpinions = ref([])
+const semesterList = ref([])
+
+const currentSemesterId = () => {
+  const current = semesterList.value.find(s => s.isCurrent === 1)
+  return current ? current.id : 0
+}
 
 onMounted(async () => {
   try {
-    const [stuRes, courseRes] = await Promise.all([
+    const [stuRes, courseRes, semesterRes] = await Promise.all([
       request.get('/list', { params: { page: 1, size: 1000 } }),
-      request.get('/course/list')
+      request.get('/course/list'),
+      request.get('/semester/list')
     ])
     if (stuRes.data.code === 0) {
       studentOpinions.value = stuRes.data.data.list || []
@@ -93,11 +101,17 @@ onMounted(async () => {
     if (courseRes.data.code === 0) {
       courseOpinions.value = courseRes.data.data
     }
+    if (semesterRes.data.code === 0) {
+      semesterList.value = semesterRes.data.data || []
+    }
   } catch (e) {}
 })
 
 const handleEdit = (index, row) => {
   form.value = { ...row }
+  if (!form.value.semesterId) {
+    form.value.semesterId = 0
+  }
   dialogFormVisible.value = true
 }
 
@@ -113,7 +127,7 @@ const editConfirm = async () => {
 }
 
 const handleAdd = () => {
-  form.value = { scoreId: '', sid: '', courseId: '', usual: 0, mid: 0, finalScore: 0 }
+  form.value = { scoreId: '', sid: '', courseId: '', usual: 0, mid: 0, finalScore: 0, semesterId: currentSemesterId() }
   addVisible.value = true
 }
 
@@ -175,6 +189,9 @@ const handleDelete = async (index, row) => {
         <el-table-column prop="scoreId" label="编号" width="70" />
         <el-table-column prop="studentName" label="学生姓名" width="110" />
         <el-table-column prop="clazzName" label="班级" width="120" />
+        <el-table-column label="学期" width="150" align="center">
+          <template #default="scope">{{ scope.row.semesterName || '未分学期' }}</template>
+        </el-table-column>
         <el-table-column prop="courseName" label="课程" width="140" />
         <el-table-column prop="usual" label="平时" width="80" />
         <el-table-column prop="mid" label="期中" width="80" />
@@ -200,6 +217,13 @@ const handleDelete = async (index, row) => {
         <el-form-item label="课程" prop="courseId">
           <el-select v-model="form.courseId" placeholder="请选择课程" class="glass-select" disabled>
             <el-option v-for="c in courseOpinions" :key="c.courseId" :label="c.name" :value="c.courseId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="学期">
+          <el-select v-model="form.semesterId" placeholder="请选择学期" class="glass-select">
+            <el-option v-for="sem in semesterList" :key="sem.id"
+                       :label="sem.name + (sem.isCurrent === 1 ? '（当前）' : '')" :value="sem.id" />
+            <el-option label="未分学期" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item label="平时成绩">
@@ -234,6 +258,13 @@ const handleDelete = async (index, row) => {
         <el-form-item label="课程" prop="courseId">
           <el-select v-model="form.courseId" placeholder="请选择课程" class="glass-select">
             <el-option v-for="c in courseOpinions" :key="c.courseId" :label="c.name" :value="c.courseId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="学期">
+          <el-select v-model="form.semesterId" placeholder="请选择学期" class="glass-select">
+            <el-option v-for="sem in semesterList" :key="sem.id"
+                       :label="sem.name + (sem.isCurrent === 1 ? '（当前）' : '')" :value="sem.id" />
+            <el-option label="未分学期" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item label="平时成绩">

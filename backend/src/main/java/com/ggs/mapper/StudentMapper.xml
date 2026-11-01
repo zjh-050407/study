@@ -138,4 +138,10 @@
         WHERE sid = #{sid}
     </update>
 
+    <update id="updateCid">
+        UPDATE student
+        SET cid = #{cid}
+        WHERE sid = #{sid}
+    </update>
+
 </mapper>

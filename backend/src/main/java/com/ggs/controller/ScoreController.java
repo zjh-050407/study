@@ -3,6 +3,7 @@ package com.ggs.controller;
 import com.alibaba.excel.EasyExcel;
 import com.ggs.annotation.OperationLogAnnotation;
 import com.ggs.dto.ScoreExportDTO;
+import com.ggs.interceptor.JwtInterceptor;
 import com.ggs.pojo.Score;
 import com.ggs.service.ScoreService;
 import com.ggs.util.RoleCheckUtil;
@@ -44,9 +45,19 @@ public class ScoreController {
         return ResultVO.success(list);
     }
 
+    /** 学生本人成绩：按学期过滤 + GPA 加权平均 + 总学分 */
+    @GetMapping("/my")
+    public ResultVO my(@RequestParam(required = false) Integer semesterId) {
+        RoleCheckUtil.requireRole("student");
+        Long uid = JwtInterceptor.UID_HOLDER.get();
+        int sid = uid == null ? -1 : uid.intValue();
+        return ResultVO.success(scoreService.myScores(sid, semesterId));
+    }
+
     @OperationLogAnnotation("录入成绩")
     @PostMapping
     public ResultVO addScore(@Valid @RequestBody Score score) {
+        RoleCheckUtil.requireRole("professor", "admin");
         scoreService.add(score);
         return ResultVO.success();
     }
@@ -54,6 +65,7 @@ public class ScoreController {
     @OperationLogAnnotation("修改成绩")
     @PutMapping
     public ResultVO updateScore(@Valid @RequestBody Score score) {
+        RoleCheckUtil.requireRole("professor", "admin");
         scoreService.update(score);
         return ResultVO.success();
     }

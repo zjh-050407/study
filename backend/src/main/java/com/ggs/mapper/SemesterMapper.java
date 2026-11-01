@@ -11,6 +11,9 @@ public interface SemesterMapper {
 
     List<Semester> listAll();
 
+    /** 查询当前学期（is_current=1），无则返回 null */
+    Semester getCurrent();
+
     Semester getById(@Param("id") int id);
 
     int countByName(@Param("name") String name, @Param("excludeId") Integer excludeId);

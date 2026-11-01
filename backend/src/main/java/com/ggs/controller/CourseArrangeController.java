@@ -3,6 +3,7 @@ package com.ggs.controller;
 import com.ggs.annotation.OperationLogAnnotation;
 import com.ggs.pojo.CourseArrange;
 import com.ggs.service.CourseArrangeService;
+import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,7 @@ public class CourseArrangeController {
     @OperationLogAnnotation("新增排课")
     @PostMapping
     public ResultVO add(@RequestBody CourseArrange arrange) {
+        RoleCheckUtil.requireRole("professor", "admin");
         String conflict = courseArrangeService.checkConflict(arrange);
         if (conflict != null) {
             return ResultVO.err(conflict);
@@ -39,6 +41,7 @@ public class CourseArrangeController {
     @OperationLogAnnotation("修改排课")
     @PutMapping
     public ResultVO update(@RequestBody CourseArrange arrange) {
+        RoleCheckUtil.requireRole("professor", "admin");
         String conflict = courseArrangeService.checkConflict(arrange);
         if (conflict != null) {
             return ResultVO.err(conflict);
@@ -53,6 +56,7 @@ public class CourseArrangeController {
     @OperationLogAnnotation("删除排课")
     @DeleteMapping("/{arrangeId}")
     public ResultVO delete(@PathVariable Integer arrangeId) {
+        RoleCheckUtil.requireRole("professor", "admin");
         int rows = courseArrangeService.delete(arrangeId);
         if (rows > 0) {
             return ResultVO.success();

@@ -13,6 +13,7 @@ public class CourseSelection {
     private Integer id;
     private Integer sid;
     private Integer courseId;
+    private Integer semesterId;
     private Integer uid;
     private LocalDateTime createTime;
     // 关联字段
@@ -20,4 +21,5 @@ public class CourseSelection {
     private String clazzName;
     private String courseName;
     private Double credit;
+    private String semesterName;
 }

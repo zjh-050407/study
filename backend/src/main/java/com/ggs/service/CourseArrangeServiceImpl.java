@@ -1,7 +1,9 @@
 package com.ggs.service;
 
 import com.ggs.mapper.CourseArrangeMapper;
+import com.ggs.mapper.SemesterMapper;
 import com.ggs.pojo.CourseArrange;
+import com.ggs.pojo.Semester;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -14,6 +16,9 @@ public class CourseArrangeServiceImpl implements CourseArrangeService {
     @Autowired
     private CourseArrangeMapper courseArrangeMapper;
 
+    @Autowired
+    private SemesterMapper semesterMapper;
+
     @Override
     public List<CourseArrange> listArrange() {
         return courseArrangeMapper.listArrange();
@@ -21,12 +26,24 @@ public class CourseArrangeServiceImpl implements CourseArrangeService {
 
     @Override
     public int add(CourseArrange arrange) {
+        applyDefaultSemester(arrange);
         return courseArrangeMapper.add(arrange);
     }
 
     @Override
     public int update(CourseArrange arrange) {
+        applyDefaultSemester(arrange);
         return courseArrangeMapper.update(arrange);
+    }
+
+    /** 学期默认逻辑：null=默认挂当前学期；0=显式未分学期（NULL） */
+    private void applyDefaultSemester(CourseArrange arrange) {
+        if (arrange.getSemesterId() == null) {
+            Semester current = semesterMapper.getCurrent();
+            arrange.setSemesterId(current == null ? null : current.getId());
+        } else if (arrange.getSemesterId() == 0) {
+            arrange.setSemesterId(null);
+        }
     }
 
     @Override

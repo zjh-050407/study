@@ -21,6 +21,11 @@ public class SemesterServiceImpl implements SemesterService {
     }
 
     @Override
+    public Semester getCurrent() {
+        return semesterMapper.getCurrent();
+    }
+
+    @Override
     public void add(Semester semester) {
         if (semester.getName() == null || semester.getName().trim().isEmpty()) {
             throw new BusinessException("学期名称不能为空");

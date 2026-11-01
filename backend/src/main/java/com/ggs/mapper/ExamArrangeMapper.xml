@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.ExamArrangeMapper">
+
+    <resultMap id="examMap" type="com.ggs.pojo.ExamArrange">
+        <id property="id" column="id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="semesterId" column="semester_id"/>
+        <result property="examDate" column="exam_date"/>
+        <result property="startSection" column="start_section"/>
+        <result property="endSection" column="end_section"/>
+        <result property="room" column="room"/>
+        <result property="invigilatorUid" column="invigilator_uid"/>
+        <result property="type" column="type"/>
+        <result property="courseName" column="course_name"/>
+        <result property="semesterName" column="semester_name"/>
+        <result property="invigilatorName" column="invigilator_name"/>
+    </resultMap>
+
+    <select id="listAll" resultMap="examMap">
+        SELECT e.id, e.course_id, e.semester_id, e.exam_date, e.start_section, e.end_section,
+               e.room, e.invigilator_uid, e.type,
+               c.name AS course_name, sem.name AS semester_name, t.name AS invigilator_name
+        FROM exam_arrange e
+        LEFT JOIN course c ON e.course_id = c.course_id
+        LEFT JOIN semester sem ON sem.id = e.semester_id
+        LEFT JOIN teacher t ON t.tid = e.invigilator_uid
+        ORDER BY e.exam_date, e.start_section, e.id
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO exam_arrange (course_id, semester_id, exam_date, start_section, end_section,
+                                  room, invigilator_uid, type)
+        VALUES (#{courseId}, #{semesterId}, #{examDate}, #{startSection}, #{endSection},
+                #{room}, #{invigilatorUid}, #{type})
+    </insert>
+
+    <update id="update">
+        UPDATE exam_arrange
+        SET course_id = #{courseId},
+            semester_id = #{semesterId},
+            exam_date = #{examDate},
+            start_section = #{startSection},
+            end_section = #{endSection},
+            room = #{room},
+            invigilator_uid = #{invigilatorUid},
+            type = #{type}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM exam_arrange WHERE id = #{id}
+    </delete>
+
+    <select id="countByCourseSemester" resultType="int">
+        SELECT COUNT(*)
+        FROM exam_arrange
+        WHERE course_id = #{courseId}
+          AND (semester_id &lt;=&gt; #{semesterId})
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <select id="listRoomConflicts" resultType="map">
+        SELECT e.id, c.name AS courseName, e.start_section AS startSection, e.end_section AS endSection
+        FROM exam_arrange e
+        LEFT JOIN course c ON e.course_id = c.course_id
+        WHERE e.room = #{room}
+          AND e.exam_date = #{examDate}
+          AND NOT (e.end_section &lt; #{startSection} OR e.start_section &gt; #{endSection})
+        <if test="excludeId != null">
+            AND e.id != #{excludeId}
+        </if>
+        LIMIT 1
+    </select>
+
+    <select id="listTeacherConflicts" resultType="map">
+        SELECT e.id, c.name AS courseName, e.room, e.start_section AS startSection, e.end_section AS endSection
+        FROM exam_arrange e
+        LEFT JOIN course c ON e.course_id = c.course_id
+        WHERE e.invigilator_uid = #{invigilatorUid}
+          AND e.exam_date = #{examDate}
+          AND NOT (e.end_section &lt; #{startSection} OR e.start_section &gt; #{endSection})
+        <if test="excludeId != null">
+            AND e.id != #{excludeId}
+        </if>
+        LIMIT 1
+    </select>
+
+    <select id="listMyExams" resultType="map">
+        SELECT e.id, e.course_id AS courseId, c.name AS courseName, e.semester_id AS semesterId,
+               sem.name AS semesterName, e.exam_date AS examDate, e.start_section AS startSection,
+               e.end_section AS endSection, e.room, e.type, e.invigilator_uid AS invigilatorUid,
+               t.name AS invigilatorName
+        FROM exam_arrange e
+        JOIN course_selection cs
+             ON cs.course_id = e.course_id
+            AND (cs.semester_id &lt;=&gt; e.semester_id)
+        LEFT JOIN course c ON e.course_id = c.course_id
+        LEFT JOIN semester sem ON sem.id = e.semester_id
+        LEFT JOIN teacher t ON t.tid = e.invigilator_uid
+        WHERE cs.sid = #{sid}
+        ORDER BY e.exam_date, e.start_section, e.id
+    </select>
+
+</mapper>

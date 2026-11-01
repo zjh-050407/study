@@ -14,4 +14,9 @@ public interface ScoreService {
     int delete(Integer scoreId);
     List<Map<String, Object>> avgByCourse();
     List<Map<String, Object>> countByGrade();
+
+    /**
+     * 学生本人成绩：按学期过滤（null=全部，0=未分学期），返回 list/gpa/totalCredit
+     */
+    Map<String, Object> myScores(Integer sid, Integer semesterId);
 }

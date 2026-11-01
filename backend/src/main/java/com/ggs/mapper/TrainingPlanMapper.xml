@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.TrainingPlanMapper">
+
+    <resultMap id="planMap" type="com.ggs.pojo.TrainingPlan">
+        <id property="id" column="id"/>
+        <result property="cid" column="cid"/>
+        <result property="name" column="name"/>
+        <result property="totalCreditRequired" column="total_credit_required"/>
+        <result property="requiredCreditRequired" column="required_credit_required"/>
+        <result property="electiveCreditRequired" column="elective_credit_required"/>
+        <result property="clazzName" column="clazz_name"/>
+    </resultMap>
+
+    <resultMap id="planCourseMap" type="com.ggs.pojo.PlanCourse">
+        <id property="id" column="id"/>
+        <result property="planId" column="plan_id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="type" column="type"/>
+        <result property="requireCredit" column="require_credit"/>
+        <result property="courseName" column="course_name"/>
+        <result property="courseCredit" column="course_credit"/>
+    </resultMap>
+
+    <select id="listPlans" resultMap="planMap">
+        SELECT p.id, p.cid, p.name, p.total_credit_required, p.required_credit_required,
+               p.elective_credit_required, c.name AS clazz_name
+        FROM training_plan p
+        LEFT JOIN clazz c ON c.cid = p.cid
+        ORDER BY p.id
+    </select>
+
+    <select id="getById" resultMap="planMap">
+        SELECT p.id, p.cid, p.name, p.total_credit_required, p.required_credit_required,
+               p.elective_credit_required, c.name AS clazz_name
+        FROM training_plan p
+        LEFT JOIN clazz c ON c.cid = p.cid
+        WHERE p.id = #{id}
+    </select>
+
+    <select id="getByCid" resultMap="planMap">
+        SELECT p.id, p.cid, p.name, p.total_credit_required, p.required_credit_required,
+               p.elective_credit_required, c.name AS clazz_name
+        FROM training_plan p
+        LEFT JOIN clazz c ON c.cid = p.cid
+        WHERE p.cid = #{cid}
+    </select>
+
+    <select id="countByCid" resultType="int">
+        SELECT COUNT(*)
+        FROM training_plan
+        WHERE cid = #{cid}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO training_plan (cid, name, total_credit_required, required_credit_required, elective_credit_required)
+        VALUES (#{cid}, #{name}, #{totalCreditRequired}, #{requiredCreditRequired}, #{electiveCreditRequired})
+    </insert>
+
+    <update id="update">
+        UPDATE training_plan
+        SET cid = #{cid},
+            name = #{name},
+            total_credit_required = #{totalCreditRequired},
+            required_credit_required = #{requiredCreditRequired},
+            elective_credit_required = #{electiveCreditRequired}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM training_plan WHERE id = #{id}
+    </delete>
+
+    <select id="listCourses" resultMap="planCourseMap">
+        SELECT pc.id, pc.plan_id, pc.course_id, pc.type, pc.require_credit,
+               c.name AS course_name, c.credit AS course_credit
+        FROM plan_course pc
+        LEFT JOIN course c ON c.course_id = pc.course_id
+        WHERE pc.plan_id = #{planId}
+        ORDER BY pc.type, pc.id
+    </select>
+
+    <select id="countCourse" resultType="int">
+        SELECT COUNT(*)
+        FROM plan_course
+        WHERE plan_id = #{planId} AND course_id = #{courseId}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <insert id="insertCourse" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO plan_course (plan_id, course_id, type, require_credit)
+        VALUES (#{planId}, #{courseId}, #{type}, #{requireCredit})
+    </insert>
+
+    <update id="updateCourse">
+        UPDATE plan_course
+        SET type = #{type}, require_credit = #{requireCredit}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteCourse">
+        DELETE FROM plan_course WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteCoursesByPlan">
+        DELETE FROM plan_course WHERE plan_id = #{planId}
+    </delete>
+
+</mapper>

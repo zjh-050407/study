@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.GraduateAuditMapper">
+
+    <resultMap id="auditMap" type="com.ggs.pojo.GraduateAudit">
+        <id property="id" column="id"/>
+        <result property="sid" column="sid"/>
+        <result property="semesterId" column="semester_id"/>
+        <result property="conclusion" column="conclusion"/>
+        <result property="detailJson" column="detail_json"/>
+        <result property="auditorUid" column="auditor_uid"/>
+        <result property="auditTime" column="audit_time"/>
+        <result property="studentName" column="student_name"/>
+        <result property="semesterName" column="semester_name"/>
+        <result property="auditorName" column="auditor_name"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO graduate_audit (sid, semester_id, conclusion, detail_json, auditor_uid, audit_time)
+        VALUES (#{sid}, #{semesterId}, #{conclusion}, #{detailJson}, #{auditorUid}, #{auditTime})
+    </insert>
+
+    <select id="listHistory" resultMap="auditMap">
+        SELECT g.id, g.sid, g.semester_id, g.conclusion, g.detail_json, g.auditor_uid, g.audit_time,
+               st.name AS student_name, sem.name AS semester_name, a.username AS auditor_name
+        FROM graduate_audit g
+        LEFT JOIN student st ON st.sid = g.sid
+        LEFT JOIN semester sem ON sem.id = g.semester_id
+        LEFT JOIN admin a ON a.uid = g.auditor_uid
+        <where>
+            <if test="sid != null">
+                AND g.sid = #{sid}
+            </if>
+        </where>
+        ORDER BY g.audit_time DESC, g.id DESC
+    </select>
+
+</mapper>

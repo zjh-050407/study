@@ -11,6 +11,13 @@
         ORDER BY is_current DESC, id ASC
     </select>
 
+    <select id="getCurrent" resultType="com.ggs.pojo.Semester">
+        SELECT id, name, start_date, end_date, is_current, create_time
+        FROM semester
+        WHERE is_current = 1
+        LIMIT 1
+    </select>
+
     <select id="getById" resultType="com.ggs.pojo.Semester">
         SELECT id, name, start_date, end_date, is_current, create_time
         FROM semester

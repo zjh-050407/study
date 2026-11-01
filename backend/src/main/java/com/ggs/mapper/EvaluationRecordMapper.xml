@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.EvaluationRecordMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO evaluation_record
+            (task_id, course_id, teacher_uid, stu_token, dim1, dim2, dim3, dim4, suggestion, create_time)
+        VALUES
+            (#{taskId}, #{courseId}, #{teacherUid}, #{stuToken}, #{dim1}, #{dim2}, #{dim3}, #{dim4}, #{suggestion}, #{createTime})
+    </insert>
+
+    <select id="countByToken" resultType="int">
+        SELECT COUNT(*) FROM evaluation_record
+        WHERE task_id = #{taskId} AND course_id = #{courseId}
+          AND teacher_uid = #{teacherUid} AND stu_token = #{stuToken}
+    </select>
+
+    <select id="listEligible" resultType="map">
+        SELECT c.course_id AS courseId, c.name AS courseName, c.credit,
+               t.tid AS teacherUid, t.name AS teacherName
+        FROM course_selection cs
+        JOIN course c ON c.course_id = cs.course_id
+        JOIN course_arrange a ON a.course_id = cs.course_id AND a.tid IS NOT NULL
+        JOIN teacher t ON t.tid = a.tid
+        WHERE cs.sid = #{sid} AND cs.semester_id = #{semesterId}
+        GROUP BY c.course_id, c.name, c.credit, t.tid, t.name
+        ORDER BY c.course_id, t.tid
+    </select>
+
+    <select id="countSelectionInSemester" resultType="int">
+        SELECT COUNT(*) FROM course_selection
+        WHERE sid = #{sid} AND course_id = #{courseId} AND semester_id = #{semesterId}
+    </select>
+
+    <select id="countTeacherOfCourse" resultType="int">
+        SELECT COUNT(*) FROM course_arrange
+        WHERE course_id = #{courseId} AND tid = #{teacherUid}
+    </select>
+
+    <select id="listStats" resultType="map">
+        SELECT er.course_id AS courseId, c.name AS courseName,
+               er.teacher_uid AS teacherUid, t.name AS teacherName,
+               COUNT(*) AS recordCount,
+               ROUND(AVG(er.dim1), 2) AS avgDim1,
+               ROUND(AVG(er.dim2), 2) AS avgDim2,
+               ROUND(AVG(er.dim3), 2) AS avgDim3,
+               ROUND(AVG(er.dim4), 2) AS avgDim4,
+               ROUND((AVG(er.dim1) + AVG(er.dim2) + AVG(er.dim3) + AVG(er.dim4)) / 4, 2) AS avgTotal
+        FROM evaluation_record er
+        LEFT JOIN course c ON c.course_id = er.course_id
+        LEFT JOIN teacher t ON t.tid = er.teacher_uid
+        WHERE er.task_id = #{taskId}
+        GROUP BY er.course_id, c.name, er.teacher_uid, t.name
+        ORDER BY avgTotal DESC, recordCount DESC
+    </select>
+
+    <select id="listSuggestions" resultType="string">
+        SELECT suggestion FROM evaluation_record
+        WHERE task_id = #{taskId} AND course_id = #{courseId} AND teacher_uid = #{teacherUid}
+          AND suggestion IS NOT NULL AND suggestion != ''
+        ORDER BY id
+    </select>
+
+</mapper>

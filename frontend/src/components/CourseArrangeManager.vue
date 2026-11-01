@@ -7,15 +7,22 @@ import { Plus } from "@element-plus/icons-vue";
 const tableData = ref([])
 const courseList = ref([])
 const teacherList = ref([])
+const semesterList = ref([])
 const loading = ref(false)
+
+const currentSemesterId = () => {
+  const current = semesterList.value.find(s => s.isCurrent === 1)
+  return current ? current.id : 0
+}
 
 const getData = async () => {
   loading.value = true
   try {
-    const [arrangeRes, courseRes, teacherRes] = await Promise.all([
+    const [arrangeRes, courseRes, teacherRes, semesterRes] = await Promise.all([
       request.get('/courseArrange/list'),
       request.get('/course/list'),
-      request.get('/teacher/list')
+      request.get('/teacher/list'),
+      request.get('/semester/list')
     ])
     if (arrangeRes.data.code === 0) {
       tableData.value = arrangeRes.data.data
@@ -25,6 +32,9 @@ const getData = async () => {
     }
     if (teacherRes.data.code === 0) {
       teacherList.value = teacherRes.data.data
+    }
+    if (semesterRes.data.code === 0) {
+      semesterList.value = semesterRes.data.data || []
     }
   } catch (err) {
     console.error('获取数据失败:', err)
@@ -43,6 +53,7 @@ const form = ref({
   classroom: '',
   weekDay: 1,
   section: 1,
+  semesterId: null,
 })
 
 const editForm = ref({
@@ -52,6 +63,7 @@ const editForm = ref({
   classroom: '',
   weekDay: 1,
   section: 1,
+  semesterId: null,
 })
 
 const weekDayOptions = [
@@ -73,7 +85,7 @@ const sectionOptions = [
 ]
 
 const handleAdd = () => {
-  form.value = { courseId: '', tid: '', classroom: '', weekDay: 1, section: 1 }
+  form.value = { courseId: '', tid: '', classroom: '', weekDay: 1, section: 1, semesterId: currentSemesterId() }
   addVisible.value = true
 }
 
@@ -100,6 +112,7 @@ const handleEdit = (index, row) => {
     classroom: row.classroom,
     weekDay: row.weekDay,
     section: row.section,
+    semesterId: row.semesterId || 0,
   }
   editVisible.value = true
 }
@@ -160,6 +173,9 @@ const handleDelete = async (index, row) => {
             {{ sectionOptions.find(o => o.value === scope.row.section)?.label || scope.row.section }}
           </template>
         </el-table-column>
+        <el-table-column label="学期" width="160" align="center">
+          <template #default="scope">{{ scope.row.semesterName || '未分学期' }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="180">
           <template #default="scope">
             <el-button size="small" class="btn-glass-edit" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
@@ -179,6 +195,17 @@ const handleDelete = async (index, row) => {
               :label="item.name"
               :value="item.courseId"
             />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="学期">
+          <el-select v-model="form.semesterId" placeholder="请选择学期" class="glass-select" style="width: 100%">
+            <el-option
+              v-for="item in semesterList"
+              :key="item.id"
+              :label="item.name + (item.isCurrent === 1 ? '（当前）' : '')"
+              :value="item.id"
+            />
+            <el-option label="未分学期" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item label="授课教师" required>
@@ -231,6 +258,17 @@ const handleDelete = async (index, row) => {
               :label="item.name"
               :value="item.courseId"
             />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="学期">
+          <el-select v-model="editForm.semesterId" placeholder="请选择学期" class="glass-select" style="width: 100%">
+            <el-option
+              v-for="item in semesterList"
+              :key="item.id"
+              :label="item.name + (item.isCurrent === 1 ? '（当前）' : '')"
+              :value="item.id"
+            />
+            <el-option label="未分学期" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item label="授课教师" required>

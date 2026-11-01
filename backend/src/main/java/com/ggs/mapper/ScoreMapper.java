@@ -17,7 +17,13 @@ public interface ScoreMapper {
     int delete(@Param("scoreId") Integer scoreId);
     int countByStudentAndCourse(@Param("sid") Integer sid,
                                 @Param("courseId") Integer courseId,
+                                @Param("semesterId") Integer semesterId,
                                 @Param("excludeId") Integer excludeId);
     List<Map<String, Object>> avgByCourse();
     List<Map<String, Object>> countByGrade();
+
+    /**
+     * 学生按学期查询成绩；semesterId=0 表示未分学期（semester_id IS NULL），null 表示全部学期
+     */
+    List<Score> listByStudentAndSemester(@Param("sid") Integer sid, @Param("semesterId") Integer semesterId);
 }

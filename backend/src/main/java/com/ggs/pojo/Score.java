@@ -37,4 +37,7 @@ public class Score {
     private String studentName;
     private String courseName;
     private String clazzName;
+    private Integer semesterId;
+    private String semesterName;
+    private Double credit;
 }

@@ -37,4 +37,7 @@ public interface StudentMapper {
     Student getByUsername(@Param("username") String username);
 
     int updatePassword(@Param("sid") int sid, @Param("password") String password);
+
+    /** 学籍异动·转专业：更新学生班级 */
+    int updateCid(@Param("sid") int sid, @Param("cid") Integer cid);
 }

@@ -4,8 +4,10 @@ import com.ggs.exception.BusinessException;
 import com.ggs.interceptor.JwtInterceptor;
 import com.ggs.mapper.CourseArrangeMapper;
 import com.ggs.mapper.CourseSelectionMapper;
+import com.ggs.mapper.SemesterMapper;
 import com.ggs.pojo.CourseArrange;
 import com.ggs.pojo.CourseSelection;
+import com.ggs.pojo.Semester;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,12 @@ public class CourseSelectionServiceImpl implements CourseSelectionService {
     @Autowired
     private CourseArrangeMapper arrangeMapper;
 
+    @Autowired
+    private SemesterMapper semesterMapper;
+
+    @Autowired
+    private StatusChangeService statusChangeService;
+
     @Override
     public List<CourseSelection> listAll() {
         return selectionMapper.listAll();
@@ -42,6 +50,11 @@ public class CourseSelectionServiceImpl implements CourseSelectionService {
         }
         if (selectionMapper.countStudent(sid) == 0) {
             throw new BusinessException("学生不存在");
+        }
+        // 学籍状态拦截：休学/退学学生暂缓选课
+        String blocked = statusChangeService.blockedStatus(sid);
+        if (blocked != null) {
+            throw new BusinessException("该学生当前学籍状态为【" + blocked + "】，无法选课");
         }
         if (selectionMapper.countCourse(courseId) == 0) {
             throw new BusinessException("课程不存在");
@@ -80,6 +93,9 @@ public class CourseSelectionServiceImpl implements CourseSelectionService {
         CourseSelection selection = new CourseSelection();
         selection.setSid(sid);
         selection.setCourseId(courseId);
+        // 默认挂当前学期（无当前学期则 NULL，兼容旧数据）
+        Semester current = semesterMapper.getCurrent();
+        selection.setSemesterId(current == null ? null : current.getId());
         Long uid = JwtInterceptor.UID_HOLDER.get();
         selection.setUid(uid == null ? null : uid.intValue());
         selection.setCreateTime(LocalDateTime.now());
@@ -91,5 +107,15 @@ public class CourseSelectionServiceImpl implements CourseSelectionService {
         if (id == null || selectionMapper.delete(id) == 0) {
             throw new BusinessException("删除失败，选课记录不存在");
         }
+    }
+
+    @Override
+    public List<Map<String, Object>> listCourseOptions(Integer sid) {
+        return selectionMapper.listCourseOptions(sid);
+    }
+
+    @Override
+    public List<Map<String, Object>> listScheduleSlots(Integer sid, Integer semesterId) {
+        return selectionMapper.listScheduleSlots(sid, semesterId);
     }
 }

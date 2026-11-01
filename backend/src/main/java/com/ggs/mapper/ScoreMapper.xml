@@ -17,46 +17,79 @@
         <result property="studentName" column="student_name"/>
         <result property="courseName" column="course_name"/>
         <result property="clazzName" column="clazz_name"/>
+        <result property="semesterId" column="semester_id"/>
+        <result property="semesterName" column="semester_name"/>
+        <result property="credit" column="credit"/>
     </resultMap>
 
     <select id="listScore" resultMap="scoreMap">
         SELECT s.score_id, s.sid, s.course_id, s.usual, s.mid, s.final, s.total, s.gp,
-               st.name AS student_name, c.name AS course_name, cl.name AS clazz_name
+               st.name AS student_name, c.name AS course_name, cl.name AS clazz_name,
+               s.semester_id, sem.name AS semester_name, c.credit
         FROM score s
         LEFT JOIN student st ON s.sid = st.sid
         LEFT JOIN course c ON s.course_id = c.course_id
         LEFT JOIN clazz cl ON st.cid = cl.cid
+        LEFT JOIN semester sem ON sem.id = s.semester_id
     </select>
 
     <select id="listByStudent" resultMap="scoreMap">
         SELECT s.score_id, s.sid, s.course_id, s.usual, s.mid, s.final, s.total, s.gp,
-               st.name AS student_name, c.name AS course_name, cl.name AS clazz_name
+               st.name AS student_name, c.name AS course_name, cl.name AS clazz_name,
+               s.semester_id, sem.name AS semester_name, c.credit
         FROM score s
         LEFT JOIN student st ON s.sid = st.sid
         LEFT JOIN course c ON s.course_id = c.course_id
         LEFT JOIN clazz cl ON st.cid = cl.cid
+        LEFT JOIN semester sem ON sem.id = s.semester_id
         WHERE s.sid = #{sid}
     </select>
 
     <select id="listByCourse" resultMap="scoreMap">
         SELECT s.score_id, s.sid, s.course_id, s.usual, s.mid, s.final, s.total, s.gp,
-               st.name AS student_name, c.name AS course_name, cl.name AS clazz_name
+               st.name AS student_name, c.name AS course_name, cl.name AS clazz_name,
+               s.semester_id, sem.name AS semester_name, c.credit
         FROM score s
         LEFT JOIN student st ON s.sid = st.sid
         LEFT JOIN course c ON s.course_id = c.course_id
         LEFT JOIN clazz cl ON st.cid = cl.cid
+        LEFT JOIN semester sem ON sem.id = s.semester_id
         WHERE s.course_id = #{courseId}
     </select>
 
+    <select id="listByStudentAndSemester" resultMap="scoreMap">
+        SELECT s.score_id, s.sid, s.course_id, s.usual, s.mid, s.final, s.total, s.gp,
+               st.name AS student_name, c.name AS course_name, cl.name AS clazz_name,
+               s.semester_id, sem.name AS semester_name, c.credit
+        FROM score s
+        LEFT JOIN student st ON s.sid = st.sid
+        LEFT JOIN course c ON s.course_id = c.course_id
+        LEFT JOIN clazz cl ON st.cid = cl.cid
+        LEFT JOIN semester sem ON sem.id = s.semester_id
+        WHERE s.sid = #{sid}
+        <if test="semesterId != null">
+            <choose>
+                <when test="semesterId == 0">
+                    AND s.semester_id IS NULL
+                </when>
+                <otherwise>
+                    AND s.semester_id = #{semesterId}
+                </otherwise>
+            </choose>
+        </if>
+        ORDER BY s.score_id
+    </select>
+
     <insert id="add" useGeneratedKeys="true" keyProperty="scoreId">
-        INSERT INTO score (sid, course_id, usual, mid, final, total, gp)
-        VALUES (#{sid}, #{courseId}, #{usual}, #{mid}, #{finalScore},
+        INSERT INTO score (sid, course_id, semester_id, usual, mid, final, total, gp)
+        VALUES (#{sid}, #{courseId}, #{semesterId}, #{usual}, #{mid}, #{finalScore},
                 #{total}, #{gp})
     </insert>
 
     <update id="update">
         UPDATE score
-        SET sid = #{sid}, course_id = #{courseId}, usual = #{usual}, mid = #{mid}, final = #{finalScore},
+        SET sid = #{sid}, course_id = #{courseId}, semester_id = #{semesterId},
+            usual = #{usual}, mid = #{mid}, final = #{finalScore},
             total = #{total}, gp = #{gp}
         WHERE score_id = #{scoreId}
     </update>
@@ -69,6 +102,7 @@
         SELECT COUNT(*)
         FROM score
         WHERE sid = #{sid} AND course_id = #{courseId}
+          AND (semester_id &lt;=&gt; #{semesterId})
         <if test="excludeId != null">
             AND score_id != #{excludeId}
         </if>

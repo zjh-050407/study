@@ -2,10 +2,13 @@ package com.ggs.service;
 
 import com.ggs.exception.BusinessException;
 import com.ggs.mapper.ScoreMapper;
+import com.ggs.mapper.SemesterMapper;
 import com.ggs.pojo.Score;
+import com.ggs.pojo.Semester;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +17,9 @@ public class ScoreServiceImpl implements ScoreService {
 
     @Autowired
     private ScoreMapper scoreMapper;
+
+    @Autowired
+    private SemesterMapper semesterMapper;
 
     @Override
     public List<Score> listScore() {
@@ -33,7 +39,8 @@ public class ScoreServiceImpl implements ScoreService {
     @Override
     public int add(Score score) {
         validateScoreRange(score);
-        validateDuplicate(score.getSid(), score.getCourseId(), null);
+        applyDefaultSemester(score);
+        validateDuplicate(score.getSid(), score.getCourseId(), score.getSemesterId(), null);
         calculateTotalAndGp(score);
         return scoreMapper.add(score);
     }
@@ -41,9 +48,20 @@ public class ScoreServiceImpl implements ScoreService {
     @Override
     public int update(Score score) {
         validateScoreRange(score);
-        validateDuplicate(score.getSid(), score.getCourseId(), score.getScoreId());
+        applyDefaultSemester(score);
+        validateDuplicate(score.getSid(), score.getCourseId(), score.getSemesterId(), score.getScoreId());
         calculateTotalAndGp(score);
         return scoreMapper.update(score);
+    }
+
+    /** 学期默认逻辑：null=默认挂当前学期；0=显式未分学期（NULL） */
+    private void applyDefaultSemester(Score score) {
+        if (score.getSemesterId() == null) {
+            Semester current = semesterMapper.getCurrent();
+            score.setSemesterId(current == null ? null : current.getId());
+        } else if (score.getSemesterId() == 0) {
+            score.setSemesterId(null);
+        }
     }
 
     private void validateScoreRange(Score score) {
@@ -55,12 +73,12 @@ public class ScoreServiceImpl implements ScoreService {
         }
     }
 
-    private void validateDuplicate(Integer sid, Integer courseId, Integer excludeId) {
+    private void validateDuplicate(Integer sid, Integer courseId, Integer semesterId, Integer excludeId) {
         if (sid == null || courseId == null) {
             throw new BusinessException("学生与课程不能为空");
         }
-        if (scoreMapper.countByStudentAndCourse(sid, courseId, excludeId) > 0) {
-            throw new BusinessException("该学生该课程已有成绩，请勿重复录入");
+        if (scoreMapper.countByStudentAndCourse(sid, courseId, semesterId, excludeId) > 0) {
+            throw new BusinessException("该学生本学期该课程已有成绩，请勿重复录入");
         }
     }
 
@@ -99,5 +117,27 @@ public class ScoreServiceImpl implements ScoreService {
     @Override
     public List<Map<String, Object>> countByGrade() {
         return scoreMapper.countByGrade();
+    }
+
+    @Override
+    public Map<String, Object> myScores(Integer sid, Integer semesterId) {
+        List<Score> list = scoreMapper.listByStudentAndSemester(sid, semesterId);
+        double gpaSum = 0.0;
+        double creditForGpa = 0.0;
+        double totalCredit = 0.0;
+        for (Score s : list) {
+            double credit = s.getCredit() == null ? 0.0 : s.getCredit();
+            totalCredit += credit;
+            if (s.getGp() != null) {
+                gpaSum += s.getGp() * credit;
+                creditForGpa += credit;
+            }
+        }
+        double gpa = creditForGpa > 0 ? Math.round(gpaSum / creditForGpa * 100.0) / 100.0 : 0.0;
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", list);
+        result.put("gpa", gpa);
+        result.put("totalCredit", totalCredit);
+        return result;
     }
 }
