@@ -7,9 +7,15 @@
 
     <resultMap id="studentMap" type="com.ggs.pojo.Student">
         <id property="sid" column="sid"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="status" column="status"/>
         <result property="name" column="name"/>
         <result property="age" column="age"/>
         <result property="sex" column="sex"/>
+        <result property="avatar" column="avatar"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
         <result property="cid" column="cid"/>
         <result property="clazzName" column="clazz_name"/>
         <result property="deptName" column="dept_name"/>
@@ -107,5 +113,29 @@
     <select id="countByClazz" resultType="int">
         SELECT COUNT(*) FROM student WHERE cid = #{cid}
     </select>
+
+    <sql id="studentDetailSelect">
+        SELECT s.sid, s.username, s.password, s.status, s.name, s.age, s.sex, s.avatar, s.email, s.phone, s.cid,
+               c.name AS clazz_name, d.name AS dept_name
+        FROM student s
+        LEFT JOIN clazz c ON s.cid = c.cid
+        LEFT JOIN department d ON c.did = d.did
+    </sql>
+
+    <select id="getById" resultMap="studentMap">
+        <include refid="studentDetailSelect"/>
+        WHERE s.sid = #{sid}
+    </select>
+
+    <select id="getByUsername" resultMap="studentMap">
+        <include refid="studentDetailSelect"/>
+        WHERE s.username = #{username}
+    </select>
+
+    <update id="updatePassword">
+        UPDATE student
+        SET password = #{password}
+        WHERE sid = #{sid}
+    </update>
 
 </mapper>

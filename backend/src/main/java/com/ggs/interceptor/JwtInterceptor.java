@@ -48,9 +48,16 @@ public class JwtInterceptor implements HandlerInterceptor {
             UID_HOLDER.set(uid);
             USERNAME_HOLDER.set(claims.get("username", String.class));
 
-            Admin admin = adminMapper.getById(uid);
-            if (admin != null) {
-                ROLE_HOLDER.set(admin.getRole());
+            // 优先使用 token 中的 role claim（学生等非 admin 表账号）；
+            // 旧版 token 无 role claim，保持从 admin 表回退查询
+            String role = claims.get("role", String.class);
+            if (role != null) {
+                ROLE_HOLDER.set(role);
+            } else {
+                Admin admin = adminMapper.getById(uid);
+                if (admin != null) {
+                    ROLE_HOLDER.set(admin.getRole());
+                }
             }
         } catch (Exception e) {
             response.setStatus(401);

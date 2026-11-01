@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.SemesterMapper">
+
+    <select id="listAll" resultType="com.ggs.pojo.Semester">
+        SELECT id, name, start_date, end_date, is_current, create_time
+        FROM semester
+        ORDER BY is_current DESC, id ASC
+    </select>
+
+    <select id="getById" resultType="com.ggs.pojo.Semester">
+        SELECT id, name, start_date, end_date, is_current, create_time
+        FROM semester
+        WHERE id = #{id}
+    </select>
+
+    <select id="countByName" resultType="int">
+        SELECT COUNT(*)
+        FROM semester
+        WHERE name = #{name}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO semester (name, start_date, end_date, is_current)
+        VALUES (#{name}, #{startDate}, #{endDate}, IFNULL(#{isCurrent}, 0))
+    </insert>
+
+    <update id="update">
+        UPDATE semester
+        SET name       = #{name},
+            start_date = #{startDate},
+            end_date   = #{endDate}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM semester WHERE id = #{id}
+    </delete>
+
+    <update id="clearCurrent">
+        UPDATE semester SET is_current = 0
+    </update>
+
+    <update id="setCurrent">
+        UPDATE semester SET is_current = 1 WHERE id = #{id}
+    </update>
+
+</mapper>

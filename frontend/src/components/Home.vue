@@ -102,6 +102,7 @@ const handleCommand = (command) => {
                 <span>教学管理</span>
               </template>
               <el-menu-item index="/home/course">课程管理</el-menu-item>
+              <el-menu-item index="/home/semester" v-if="role === 'professor' || role === 'admin'">学期管理</el-menu-item>
               <el-menu-item index="/home/courseArrange">排课管理</el-menu-item>
               <el-menu-item index="/home/courseSelection">
                 <el-icon><Reading /></el-icon>

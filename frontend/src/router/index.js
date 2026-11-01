@@ -1,7 +1,10 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import Login from "@/components/Login.vue";
 import Home from "@/components/Home.vue";
+import StuHome from "@/components/StuHome.vue";
+import StuPlaceholder from "@/components/StuPlaceholder.vue";
 import StudentManager from "@/components/StudentManager.vue";
+import SemesterManager from "@/components/SemesterManager.vue";
 import T1 from "@/components/T1.vue";
 import T2 from "@/components/T2.vue";
 import T3 from "@/components/T3.vue";
@@ -21,6 +24,7 @@ import { ElMessage } from 'element-plus'
 const routeRoleMap = {
   '/home/department': ['professor', 'admin'],
   '/home/t2': ['professor', 'admin'],
+  '/home/semester': ['professor', 'admin'],
   '/home/systemInit': ['admin'],
   '/home/registerApproval': ['admin'],
   '/home/operationLog': ['admin'],
@@ -43,6 +47,7 @@ const routes = [
             { path: "t4", component: T4 },
             { path: "department", component: T4 },
             { path: "clazz", component: ClazzManager },
+            { path: "semester", component: SemesterManager },
             { path: "course", component: CourseManager },
             { path: "courseArrange", component: CourseArrangeManager },
             { path: "score", component: ScoreManager },
@@ -52,6 +57,19 @@ const routes = [
             { path: "systemInit", component: SystemInit },
             { path: "registerApproval", component: RegisterApproval },
             { path: "operationLog", component: OperationLog },
+        ]
+    },
+    {
+        path: "/stu",
+        component: StuHome,
+        redirect: "/stu/notice",
+        children: [
+            { path: "notice", component: NoticeManager },
+            { path: "schedule", component: StuPlaceholder, props: { title: '我的课表', desc: '这里将展示你的个人课程表，含上课时间、地点与任课教师。模块建设中，敬请期待。' } },
+            { path: "score", component: StuPlaceholder, props: { title: '我的成绩', desc: '这里将展示你的各科成绩与绩点。模块建设中，敬请期待。' } },
+            { path: "selection", component: StuPlaceholder, props: { title: '自助选课', desc: '这里将支持你在开放时段自助选修课程。模块建设中，敬请期待。' } },
+            { path: "evaluation", component: StuPlaceholder, props: { title: '教学评教', desc: '这里将支持你对任课教师进行教学评价。模块建设中，敬请期待。' } },
+            { path: "exam", component: StuPlaceholder, props: { title: '考试安排', desc: '这里将展示你的考试时间与考场信息。模块建设中，敬请期待。' } },
         ]
     },
     {

@@ -17,8 +17,8 @@
         <div class="login-title-wrap">
           <h3 class="login-title">用户登录</h3>
         </div>
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="ruleForm.username" placeholder="请输入用户名"/>
+        <el-form-item label="用户名/学号" prop="username">
+          <el-input v-model="ruleForm.username" placeholder="请输入用户名或学号"/>
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="ruleForm.password" type="password" placeholder="请输入密码" autocomplete="off"/>
@@ -89,7 +89,11 @@ const login = async () => {
         const data = result.data.data
         localStorage.setItem('token', data.token)
         localStorage.setItem('user', JSON.stringify(data))
-        router.push("/home")
+        if (data.role === 'student') {
+          router.push("/stu/notice")
+        } else {
+          router.push("/home")
+        }
         ElMessage.success("登录成功")
       } else {
         ElMessage.error(result.data.message || "登录失败")

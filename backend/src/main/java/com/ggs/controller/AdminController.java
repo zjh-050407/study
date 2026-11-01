@@ -2,7 +2,9 @@ package com.ggs.controller;
 
 import com.ggs.pojo.Admin;
 import com.ggs.pojo.RegisterRequest;
+import com.ggs.pojo.Student;
 import com.ggs.service.AdminService;
+import com.ggs.service.StudentService;
 import com.ggs.util.JwtUtil;
 import com.ggs.vo.LoginVO;
 import com.ggs.vo.ResultVO;
@@ -20,6 +22,9 @@ public class AdminController {
     @Autowired
     private AdminService adminService;
 
+    @Autowired
+    private StudentService studentService;
+
     @Value("${app.upload-path}")
     private String uploadPath;
 
@@ -29,12 +34,19 @@ public class AdminController {
     @GetMapping("/login")
     public ResultVO login(String username, String password) {
         Admin admin = this.adminService.login(username, password);
-        if (admin == null) {
-            return ResultVO.err("用户名或密码错误");
+        if (admin != null) {
+            String token = JwtUtil.generateToken(admin.getUid(), admin.getUsername(), admin.getRole());
+            LoginVO loginVO = new LoginVO(token, admin.getUid(), admin.getUsername(), admin.getAvatar(), admin.getRole());
+            return ResultVO.success(loginVO);
         }
-        String token = JwtUtil.generateToken(admin.getUid(), admin.getUsername());
-        LoginVO loginVO = new LoginVO(token, admin.getUid(), admin.getUsername(), admin.getAvatar(), admin.getRole());
-        return ResultVO.success(loginVO);
+        // 教师/管理员登录失败后回退学生账号登录（学号或学生用户名）
+        Student stu = studentService.login(username, password);
+        if (stu != null) {
+            String token = JwtUtil.generateToken(Long.valueOf(stu.getSid()), stu.getName(), "student");
+            LoginVO loginVO = new LoginVO(token, Long.valueOf(stu.getSid()), stu.getName(), stu.getAvatar(), "student");
+            return ResultVO.success(loginVO);
+        }
+        return ResultVO.err("用户名或密码错误");
     }
 
     @PutMapping("/password")

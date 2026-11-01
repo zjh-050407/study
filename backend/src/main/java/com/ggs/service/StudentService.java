@@ -24,4 +24,12 @@ public interface StudentService {
     List<Student> getStu(Student student);
 
     int countStu(String name, String cname);
+
+    Student getById(int sid);
+
+    Student login(String account, String password);
+
+    int resetPassword(int sid);
+
+    int updatePassword(int sid, String password);
 }

@@ -31,4 +31,10 @@ public interface StudentMapper {
     int countStu(@Param("name") String name, @Param("cname") String cname);
 
     int countByClazz(@Param("cid") Integer cid);
+
+    Student getById(@Param("sid") int sid);
+
+    Student getByUsername(@Param("username") String username);
+
+    int updatePassword(@Param("sid") int sid, @Param("password") String password);
 }

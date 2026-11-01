@@ -31,13 +31,19 @@ public class JwtUtil {
     }
 
     public static String generateToken(Long uid, String username) {
-        return Jwts.builder()
+        return generateToken(uid, username, null);
+    }
+
+    public static String generateToken(Long uid, String username, String role) {
+        io.jsonwebtoken.JwtBuilder builder = Jwts.builder()
                 .subject(String.valueOf(uid))
                 .claim("username", username)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRE))
-                .signWith(getKey())
-                .compact();
+                .expiration(new Date(System.currentTimeMillis() + EXPIRE));
+        if (role != null) {
+            builder.claim("role", role);
+        }
+        return builder.signWith(getKey()).compact();
     }
 
     public static Claims parseToken(String token) {

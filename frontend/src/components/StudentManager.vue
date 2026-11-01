@@ -175,6 +175,26 @@ const handleUpload = async (options) => {
   }
 }
 
+const handleResetPassword = async (row) => {
+  ElMessageBox.confirm(
+      `确认将学号 ${row.sid}（${row.name}）的登录密码重置为 123456？`,
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+  ).then(async () => {
+    const result = await request.post('/student/resetPassword', null, { params: { sid: row.sid } })
+    if (result.data.code === 0) {
+      ElMessage.success('重置成功，新密码为 123456')
+    } else {
+      ElMessage.error(result.data.message || '重置失败')
+    }
+  }).catch(() => {
+    ElMessage.info('已取消重置')
+  })
+}
+
 const handleDelete = async (index, row) => {
   ElMessageBox.confirm(
       '是否确认删除',
@@ -229,9 +249,10 @@ const handleDelete = async (index, row) => {
         <el-table-column prop="sex" label="性别" width="80" />
         <el-table-column prop="clazzName" label="班级" width="120" />
         <el-table-column prop="deptName" label="院系" width="140" />
-        <el-table-column label="操作" width="180">
+        <el-table-column label="操作" width="250" fixed="right">
           <template #default="scope">
             <el-button size="small" class="btn-glass-edit" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+            <el-button size="small" class="btn-glass-reset" @click="handleResetPassword(scope.row)">重置密码</el-button>
             <el-button size="small" class="btn-glass-danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -403,6 +424,16 @@ const handleDelete = async (index, row) => {
 }
 :deep(.btn-glass-danger:hover) {
   background: rgba(245, 108, 108, 0.15) !important;
+}
+:deep(.btn-glass-reset) {
+  background: rgba(103, 194, 58, 0.08) !important;
+  border: 1px solid rgba(103, 194, 58, 0.25) !important;
+  color: #67c23a !important;
+  border-radius: 6px !important;
+  transition: all 0.2s;
+}
+:deep(.btn-glass-reset:hover) {
+  background: rgba(103, 194, 58, 0.15) !important;
 }
 
 /* 玻璃输入框 */

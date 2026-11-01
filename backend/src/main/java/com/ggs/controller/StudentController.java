@@ -9,6 +9,7 @@ import com.ggs.mapper.StudentMapper;
 import com.ggs.pojo.Clazz;
 import com.ggs.pojo.Student;
 import com.ggs.service.StudentService;
+import com.ggs.interceptor.JwtInterceptor;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import jakarta.servlet.http.HttpServletResponse;
@@ -97,6 +98,29 @@ public class StudentController {
             return ResultVO.err("没有找到");
         }
         return ResultVO.success(find);
+    }
+
+    @OperationLogAnnotation("重置学生密码")
+    @PostMapping("/student/resetPassword")
+    public ResultVO resetPassword(@RequestParam int sid) {
+        RoleCheckUtil.requireRole("professor", "admin");
+        int isUpdate = studentService.resetPassword(sid);
+        if (isUpdate == 0) {
+            return ResultVO.err("重置失败");
+        }
+        return ResultVO.success();
+    }
+
+    @GetMapping("/student/me")
+    public ResultVO me() {
+        RoleCheckUtil.requireRole("student");
+        Long uid = JwtInterceptor.UID_HOLDER.get();
+        Student stu = studentService.getById(uid.intValue());
+        if (stu == null) {
+            return ResultVO.err("学生不存在");
+        }
+        stu.setPassword(null);
+        return ResultVO.success(stu);
     }
 
     @OperationLogAnnotation("导出学生信息")
