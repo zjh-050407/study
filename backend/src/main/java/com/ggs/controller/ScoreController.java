@@ -8,6 +8,7 @@ import com.ggs.mapper.ScoreMapper;
 import com.ggs.pojo.Score;
 import com.ggs.service.ScoreService;
 import com.ggs.util.DataScopeUtil;
+import com.ggs.util.PageUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,6 +38,8 @@ public class ScoreController {
                               @RequestParam(required = false) Integer size) {
         Integer did = DataScopeUtil.currentDid();
         if (page != null && size != null) {
+            page = PageUtil.clampPage(page);
+            size = PageUtil.clampSize(size);
             int offset = (page - 1) * size;
             List<Score> list = scoreMapper.listByPage(offset, size, did);
             int total = scoreMapper.countAll(did);

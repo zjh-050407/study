@@ -12,12 +12,17 @@ import com.ggs.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
 public class JwtInterceptor implements HandlerInterceptor {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtInterceptor.class);
 
     @Autowired
     private AdminMapper adminMapper;
@@ -31,6 +36,9 @@ public class JwtInterceptor implements HandlerInterceptor {
     @Autowired
     private TeacherMapper teacherMapper;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
     public static final ThreadLocal<Long> UID_HOLDER = new ThreadLocal<>();
     public static final ThreadLocal<String> USERNAME_HOLDER = new ThreadLocal<>();
     public static final ThreadLocal<String> ROLE_HOLDER = new ThreadLocal<>();
@@ -40,7 +48,8 @@ public class JwtInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String path = request.getRequestURI();
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod()) || "/login".equals(path) || "/register".equals(path) || path.startsWith("/swagger") || path.startsWith("/v3")) {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod()) || "/login".equals(path) || "/register".equals(path)
+                || "/captcha".equals(path) || path.startsWith("/swagger") || path.startsWith("/v3")) {
             return true;
         }
 
@@ -59,6 +68,17 @@ public class JwtInterceptor implements HandlerInterceptor {
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().write("{\"code\":1,\"message\":\"Token已过期\",\"data\":null}");
                 return false;
+            }
+            // 安全加固：登出黑名单校验（Redis 故障时放行并告警，优先可用性）
+            try {
+                if (Boolean.TRUE.equals(redisTemplate.hasKey(JwtUtil.blacklistKey(token)))) {
+                    response.setStatus(401);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"code\":1,\"message\":\"Token已注销，请重新登录\",\"data\":null}");
+                    return false;
+                }
+            } catch (Exception e) {
+                log.warn("JWT 黑名单校验失败（Redis 不可用），本次放行: {}", e.getMessage());
             }
             Claims claims = JwtUtil.parseToken(token);
             Long uid = Long.valueOf(claims.getSubject());

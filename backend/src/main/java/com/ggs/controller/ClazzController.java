@@ -4,6 +4,7 @@ import com.ggs.mapper.ClazzMapper;
 import com.ggs.pojo.Clazz;
 import com.ggs.service.ClazzService;
 import com.ggs.util.DataScopeUtil;
+import com.ggs.util.PageUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,8 @@ public class ClazzController {
                               @RequestParam(required = false) Integer size) {
         Integer did = DataScopeUtil.currentDid();
         if (page != null && size != null) {
+            page = PageUtil.clampPage(page);
+            size = PageUtil.clampSize(size);
             int offset = (page - 1) * size;
             List<Clazz> list = clazzMapper.listByPage(offset, size, did);
             int total = clazzMapper.countAll(did);

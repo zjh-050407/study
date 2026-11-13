@@ -48,6 +48,8 @@ public class OperationLogAspect {
             }
 
             String params = Arrays.toString(point.getArgs());
+            // 安全加固：密码类字段脱敏，避免凭证落入审计日志
+            params = params.replaceAll("(?i)(password|oldPassword|newPassword|passwd|secret)=([^,\\]]*)", "$1=***");
             if (params.length() > 500) {
                 params = params.substring(0, 500) + "...";
             }

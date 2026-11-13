@@ -3,6 +3,7 @@ package com.ggs.controller;
 import com.ggs.annotation.OperationLogAnnotation;
 import com.ggs.pojo.Notice;
 import com.ggs.service.NoticeService;
+import com.ggs.util.PageUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ public class NoticeController {
     @GetMapping("/list")
     public ResultVO list(@RequestParam(defaultValue = "1") int page,
                          @RequestParam(defaultValue = "10") int size) {
+        page = PageUtil.clampPage(page);
+        size = PageUtil.clampSize(size);
         return ResultVO.success(noticeService.listNotice(page, size));
     }
 

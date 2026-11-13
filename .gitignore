@@ -25,5 +25,8 @@ pnpm-debug.log*
 Thumbs.db
 *.log
 
+# 运行时上传目录
+backend/uploads/
+
 # 含其他成员信息的分工表，默认不传
 组队详情.xlsx

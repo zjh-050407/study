@@ -4,6 +4,7 @@ import com.ggs.mapper.CourseMapper;
 import com.ggs.pojo.Course;
 import com.ggs.service.CourseService;
 import com.ggs.util.DataScopeUtil;
+import com.ggs.util.PageUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,8 @@ public class CourseController {
                                @RequestParam(required = false) Integer size) {
         Integer did = DataScopeUtil.currentDid();
         if (page != null && size != null) {
+            page = PageUtil.clampPage(page);
+            size = PageUtil.clampSize(size);
             int offset = (page - 1) * size;
             List<Course> list = courseMapper.listByPage(offset, size, did);
             int total = courseMapper.countAll(did);

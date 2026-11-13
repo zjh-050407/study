@@ -19,9 +19,13 @@ import java.util.stream.Collectors;
  */
 public class StudentImportListener implements ReadListener<StudentImportDTO> {
 
+    /** 安全加固：单次导入行数上限，防止超大文件耗尽内存 */
+    public static final int MAX_ROWS = 5000;
+
     private final Map<String, Integer> clazzNameToId;
     private final List<StudentImportDTO> cachedDataList = new ArrayList<>();
     private final List<String> errors = new ArrayList<>();
+    private boolean overLimit = false;
 
     public StudentImportListener(List<Clazz> clazzList) {
         this.clazzNameToId = clazzList.stream()
@@ -30,7 +34,15 @@ public class StudentImportListener implements ReadListener<StudentImportDTO> {
 
     @Override
     public void invoke(StudentImportDTO data, AnalysisContext context) {
+        if (cachedDataList.size() >= MAX_ROWS) {
+            overLimit = true;
+            throw new RuntimeException("单次导入最多 " + MAX_ROWS + " 行");
+        }
         cachedDataList.add(data);
+    }
+
+    public boolean isOverLimit() {
+        return overLimit;
     }
 
     @Override

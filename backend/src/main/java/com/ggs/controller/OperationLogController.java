@@ -3,6 +3,7 @@ package com.ggs.controller;
 import com.ggs.mapper.OperationLogMapper;
 import com.ggs.pojo.OperationLog;
 import com.ggs.service.OperationLogService;
+import com.ggs.util.PageUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,8 @@ public class OperationLogController {
                          @RequestParam(required = false) String startTime,
                          @RequestParam(required = false) String endTime) {
         RoleCheckUtil.requireRole("admin");
+        page = PageUtil.clampPage(page);
+        size = PageUtil.clampSize(size);
         int offset = (page - 1) * size;
         List<OperationLog> list = operationLogMapper.listByPage(offset, size, username, operation, startTime, endTime);
         int total = operationLogMapper.countByFilter(username, operation, startTime, endTime);

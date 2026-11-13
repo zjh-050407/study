@@ -4,6 +4,7 @@ import com.ggs.mapper.TeacherMapper;
 import com.ggs.pojo.Teacher;
 import com.ggs.service.TeacherService;
 import com.ggs.util.DataScopeUtil;
+import com.ggs.util.PageUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ public class TeacherController {
         RoleCheckUtil.requireRole("professor", "admin");
         Integer did = DataScopeUtil.currentDid();
         if (page != null && size != null) {
+            page = PageUtil.clampPage(page);
+            size = PageUtil.clampSize(size);
             int offset = (page - 1) * size;
             List<Teacher> list = teacherMapper.listByPage(offset, size, did);
             int total = teacherMapper.countAll(did);

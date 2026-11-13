@@ -9,6 +9,8 @@ import com.ggs.mapper.StudentMapper;
 import com.ggs.pojo.Clazz;
 import com.ggs.pojo.Student;
 import com.ggs.util.DataScopeUtil;
+import com.ggs.util.FileCheckUtil;
+import com.ggs.util.PageUtil;
 import com.ggs.service.StudentService;
 import com.ggs.interceptor.JwtInterceptor;
 import com.ggs.util.RoleCheckUtil;
@@ -40,6 +42,8 @@ public class StudentController {
                             @RequestParam(defaultValue = "5") int size,
                             @RequestParam(required = false) String name,
                             @RequestParam(required = false) String cname) {
+        page = PageUtil.clampPage(page);
+        size = PageUtil.clampSize(size);
         int offset = (page - 1) * size;
         Integer did = DataScopeUtil.currentDid();
         List<Student> list = studentMapper.listStuByPage(offset, size, name, cname, did);
@@ -155,9 +159,19 @@ public class StudentController {
     @PostMapping("/student/import")
     public ResultVO importStudent(@RequestParam("file") MultipartFile file) throws IOException {
         RoleCheckUtil.requireRole("professor", "admin");
+        // 安全加固：Excel 类型/大小校验
+        FileCheckUtil.checkExcel(file);
         List<Clazz> clazzList = clazzMapper.listClazz(DataScopeUtil.currentDid());
         StudentImportListener listener = new StudentImportListener(clazzList);
-        EasyExcel.read(file.getInputStream(), StudentImportDTO.class, listener).sheet().doRead();
+        try {
+            EasyExcel.read(file.getInputStream(), StudentImportDTO.class, listener).sheet().doRead();
+        } catch (RuntimeException e) {
+            // 行数超限等读取期异常统一转为业务提示
+            if (listener.isOverLimit()) {
+                return ResultVO.err("单次导入最多 " + StudentImportListener.MAX_ROWS + " 行");
+            }
+            throw e;
+        }
         listener.validateAll();
         Map<String, Object> result = new HashMap<>();
         List<String> errors = listener.getErrors();

@@ -23,6 +23,12 @@
         <el-form-item label="密码" prop="password">
           <el-input v-model="ruleForm.password" type="password" placeholder="请输入密码" autocomplete="off"/>
         </el-form-item>
+        <el-form-item v-if="needCaptcha" label="验证码" prop="captchaCode">
+          <div class="captcha-row">
+            <el-input v-model="ruleForm.captchaCode" placeholder="请输入验证码" style="width: 150px"/>
+            <img :src="captchaImg" class="captcha-img" alt="验证码" title="点击刷新" @click="loadCaptcha"/>
+          </div>
+        </el-form-item>
         <el-form-item>
           <div class="contain-button">
             <el-button type="primary" @click="login">登录</el-button>
@@ -70,6 +76,8 @@ const ruleFormRef = ref<FormInstance>()
 const ruleForm = ref({
   username: '',
   password: '',
+  captchaId: '',
+  captchaCode: '',
 })
 
 const rules = {
@@ -79,12 +87,34 @@ const rules = {
 
 const router = useRouter()
 
+// 安全加固：连续失败后后端要求验证码
+const needCaptcha = ref(false)
+const captchaImg = ref('')
+
+const loadCaptcha = async () => {
+  try {
+    const result = await request.get('/captcha')
+    if (result.data.code === 0) {
+      captchaImg.value = result.data.data.img
+      ruleForm.value.captchaId = result.data.data.captchaId
+      ruleForm.value.captchaCode = ''
+    }
+  } catch (e) {
+    captchaImg.value = ''
+  }
+}
+
 const login = async () => {
   if (!ruleFormRef.value) return
   await ruleFormRef.value.validate(async (valid) => {
     if (!valid) return
     try {
-      const result = await request.get("/login", { params: ruleForm.value })
+      const body = { ...ruleForm.value }
+      if (!needCaptcha.value) {
+        delete body.captchaId
+        delete body.captchaCode
+      }
+      const result = await request.post("/login", body)
       if (result.data.code === 0) {
         const data = result.data.data
         localStorage.setItem('token', data.token)
@@ -97,6 +127,11 @@ const login = async () => {
         ElMessage.success("登录成功")
       } else {
         ElMessage.error(result.data.message || "登录失败")
+        // 触发验证码要求
+        if (result.data.message === '验证码错误或已过期') {
+          needCaptcha.value = true
+          await loadCaptcha()
+        }
       }
     } catch (e) {
       ElMessage.error("网络错误")
@@ -261,6 +296,22 @@ const doRegister = async () => {
 
 .contain-button .el-button {
   min-width: 110px;
+}
+
+/* 验证码行 */
+.captcha-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.captcha-img {
+  height: 32px;
+  width: 90px;
+  border: 1px solid var(--glass-border-light);
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 :deep(.el-form-item__label) {

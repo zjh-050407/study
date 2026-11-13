@@ -39,15 +39,18 @@ const submit = async () => {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    const result = await request.put("/password", null, {
-      params: {
-        uid: form.uid,
-        oldPassword: form.oldPassword,
-        newPassword: form.newPassword,
-      }
+    // 安全加固：凭证改由请求体传输，避免密码落入访问日志
+    const result = await request.put("/password", {
+      uid: form.uid,
+      oldPassword: form.oldPassword,
+      newPassword: form.newPassword,
     })
     if (result.data.code === 0) {
       ElMessage.success("密码修改成功，请重新登录")
+      try {
+        // 安全加固：吊销当前 token，防止改密后旧凭证继续有效
+        await request.post("/logout")
+      } catch (e) {}
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       setTimeout(() => {

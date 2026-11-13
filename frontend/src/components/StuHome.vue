@@ -13,6 +13,7 @@ import {
   ArrowDown
 } from '@element-plus/icons-vue'
 import { useRouter } from "vue-router";
+import request from "@/utils/request.js";
 
 const router = useRouter()
 const username = ref("")
@@ -29,8 +30,14 @@ onMounted(() => {
   }
 })
 
-const handleCommand = (command) => {
+const handleCommand = async (command) => {
   if (command === "logout") {
+    try {
+      // 安全加固：通知后端将 token 加入黑名单
+      await request.post("/logout")
+    } catch (e) {
+      // 后端不可达时仍完成本地登出
+    }
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     ElMessage.success("退出登录")

@@ -5,6 +5,7 @@ import com.ggs.interceptor.JwtInterceptor;
 import com.ggs.mapper.ExamArrangeMapper;
 import com.ggs.pojo.ExamArrange;
 import com.ggs.service.ExamArrangeService;
+import com.ggs.util.PageUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,8 @@ public class ExamController {
                          @RequestParam(required = false) Integer size) {
         RoleCheckUtil.requireRole("professor", "admin");
         if (page != null && size != null) {
+            page = PageUtil.clampPage(page);
+            size = PageUtil.clampSize(size);
             int offset = (page - 1) * size;
             List<ExamArrange> list = examMapper.listByPage(offset, size);
             int total = examMapper.countAll();
