@@ -1,7 +1,9 @@
 package com.ggs.controller;
 
+import com.ggs.mapper.ClazzMapper;
 import com.ggs.pojo.Clazz;
 import com.ggs.service.ClazzService;
+import com.ggs.util.DataScopeUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +18,20 @@ public class ClazzController {
     @Autowired
     private ClazzService clazzService;
 
+    @Autowired
+    private ClazzMapper clazzMapper;
+
     @GetMapping("/list")
-    public ResultVO listClazz() {
-        List<Clazz> list = clazzService.listClazz();
+    public ResultVO listClazz(@RequestParam(required = false) Integer page,
+                              @RequestParam(required = false) Integer size) {
+        Integer did = DataScopeUtil.currentDid();
+        if (page != null && size != null) {
+            int offset = (page - 1) * size;
+            List<Clazz> list = clazzMapper.listByPage(offset, size, did);
+            int total = clazzMapper.countAll(did);
+            return ResultVO.success(new ResultVO.PageResult<>(list, total, page, size));
+        }
+        List<Clazz> list = clazzMapper.listClazz(did);
         return ResultVO.success(list);
     }
 

@@ -3,6 +3,7 @@ package com.ggs.service;
 import com.ggs.mapper.ClazzMapper;
 import com.ggs.mapper.StudentMapper;
 import com.ggs.pojo.Clazz;
+import com.ggs.util.DataScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class ClazzServiceImpl implements ClazzService {
 
     @Override
     public List<Clazz> listClazz() {
-        return clazzMapper.listClazz();
+        return clazzMapper.listClazz(DataScopeUtil.currentDid());
     }
 
     @Override
@@ -29,16 +30,20 @@ public class ClazzServiceImpl implements ClazzService {
 
     @Override
     public int add(Clazz clazz) {
+        DataScopeUtil.requireInScope(clazz.getDid());
         return clazzMapper.add(clazz);
     }
 
     @Override
     public int update(Clazz clazz) {
+        DataScopeUtil.requireInScope(clazz.getDid());
         return clazzMapper.update(clazz);
     }
 
     @Override
     public int delete(Integer cid) {
+        Clazz exist = clazzMapper.getById(cid);
+        DataScopeUtil.requireInScope(exist == null ? null : exist.getDid());
         if (studentMapper.countByClazz(cid) > 0) {
             throw new RuntimeException("该班级下存在学生，无法删除");
         }

@@ -23,7 +23,7 @@ public interface StudentService {
 
     List<Student> getStu(Student student);
 
-    int countStu(String name, String cname);
+    int countStu(String name, String cname, Integer did);
 
     Student getById(int sid);
 

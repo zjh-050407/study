@@ -21,6 +21,23 @@
         FROM clazz c
         LEFT JOIN department d ON c.did = d.did
         LEFT JOIN teacher t ON c.tid = t.tid
+        <if test="did != null">WHERE c.did = #{did}</if>
+    </select>
+
+    <select id="listByPage" resultMap="clazzMap">
+        SELECT c.cid, c.name, c.did, c.tid, c.capacity,
+               d.name AS dept_name, t.name AS teacher_name
+        FROM clazz c
+        LEFT JOIN department d ON c.did = d.did
+        LEFT JOIN teacher t ON c.tid = t.tid
+        <if test="did != null">WHERE c.did = #{did}</if>
+        ORDER BY c.cid
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM clazz
+        <if test="did != null">WHERE did = #{did}</if>
     </select>
 
     <select id="getById" resultMap="clazzMap">

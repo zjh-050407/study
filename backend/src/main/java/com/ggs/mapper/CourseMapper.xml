@@ -10,22 +10,37 @@
         <result property="name" column="name"/>
         <result property="credit" column="credit"/>
         <result property="hours" column="hours"/>
+        <result property="capacity" column="capacity"/>
     </resultMap>
 
     <select id="listCourse" resultMap="courseMap">
-        SELECT course_id, name, credit, hours FROM course
+        SELECT course_id, name, credit, hours, capacity FROM course
+        <if test="did != null">WHERE did = #{did}</if>
+        ORDER BY course_id
+    </select>
+
+    <select id="listByPage" resultMap="courseMap">
+        SELECT course_id, name, credit, hours, capacity FROM course
+        <if test="did != null">WHERE did = #{did}</if>
+        ORDER BY course_id
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM course
+        <if test="did != null">WHERE did = #{did}</if>
     </select>
 
     <select id="getById" resultMap="courseMap">
-        SELECT course_id, name, credit, hours FROM course WHERE course_id = #{courseId}
+        SELECT course_id, name, credit, hours, capacity FROM course WHERE course_id = #{courseId}
     </select>
 
     <insert id="add" useGeneratedKeys="true" keyProperty="courseId">
-        INSERT INTO course (name, credit, hours) VALUES (#{name}, #{credit}, #{hours})
+        INSERT INTO course (name, credit, hours, capacity) VALUES (#{name}, #{credit}, #{hours}, #{capacity})
     </insert>
 
     <update id="update">
-        UPDATE course SET name = #{name}, credit = #{credit}, hours = #{hours} WHERE course_id = #{courseId}
+        UPDATE course SET name = #{name}, credit = #{credit}, hours = #{hours}, capacity = #{capacity} WHERE course_id = #{courseId}
     </update>
 
     <delete id="delete">

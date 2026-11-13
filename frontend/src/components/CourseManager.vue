@@ -6,13 +6,17 @@ import { Plus } from "@element-plus/icons-vue";
 
 const tableData = ref([])
 const loading = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 
 const getData = async () => {
   loading.value = true
   try {
-    const result = await request.get('/course/list')
+    const result = await request.get('/course/list', { params: { page: currentPage.value, size: pageSize.value } })
     if (result.data.code === 0) {
-      tableData.value = result.data.data
+      tableData.value = result.data.data.list
+      total.value = result.data.data.total
     }
   } catch (err) {
     console.error('获取数据失败:', err)
@@ -21,6 +25,11 @@ const getData = async () => {
   }
 }
 getData()
+
+const handlePageChange = (page) => {
+  currentPage.value = page
+  getData()
+}
 
 const dialogFormVisible = ref(false)
 const addVisible = ref(false)
@@ -31,6 +40,7 @@ const form = ref({
   name: '',
   credit: 3.0,
   hours: 48,
+  capacity: 50,
 })
 
 const rules = {
@@ -56,7 +66,7 @@ const editConfirm = async () => {
 }
 
 const handleAdd = () => {
-  form.value = { courseId: '', name: '', credit: 3.0, hours: 48 }
+  form.value = { courseId: '', name: '', credit: 3.0, hours: 48, capacity: 50 }
   addVisible.value = true
 }
 
@@ -101,6 +111,7 @@ const handleDelete = async (index, row) => {
         <el-table-column prop="name" label="课程名称" width="180" />
         <el-table-column prop="credit" label="学分" width="100" />
         <el-table-column prop="hours" label="学时" width="100" />
+        <el-table-column prop="capacity" label="容量" width="100" />
         <el-table-column label="操作" width="200">
           <template #default="scope">
             <el-button size="small" class="btn-glass-edit" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
@@ -108,6 +119,17 @@ const handleDelete = async (index, row) => {
           </template>
         </el-table-column>
       </el-table>
+      <div style="display: flex; justify-content: center; margin-top: 12px;">
+        <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50]"
+            :total="total"
+            layout="total, sizes, prev, pager, next"
+            class="glass-pagination"
+            @current-change="handlePageChange"
+        />
+      </div>
     </el-card>
 
     <el-dialog v-model="dialogFormVisible" title="编辑课程" width="500" class="glass-dialog">
@@ -120,6 +142,9 @@ const handleDelete = async (index, row) => {
         </el-form-item>
         <el-form-item label="学时" prop="hours">
           <el-input-number v-model="form.hours" :min="8" :max="160" :step="8" />
+        </el-form-item>
+        <el-form-item label="容量" prop="capacity">
+          <el-input-number v-model="form.capacity" :min="1" :max="500" :step="5" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -138,6 +163,9 @@ const handleDelete = async (index, row) => {
         </el-form-item>
         <el-form-item label="学时" prop="hours">
           <el-input-number v-model="form.hours" :min="8" :max="160" :step="8" />
+        </el-form-item>
+        <el-form-item label="容量" prop="capacity">
+          <el-input-number v-model="form.capacity" :min="1" :max="500" :step="5" />
         </el-form-item>
       </el-form>
       <template #footer>

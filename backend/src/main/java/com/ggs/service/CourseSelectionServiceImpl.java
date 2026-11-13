@@ -2,13 +2,21 @@ package com.ggs.service;
 
 import com.ggs.exception.BusinessException;
 import com.ggs.interceptor.JwtInterceptor;
+import com.ggs.mapper.ClazzMapper;
 import com.ggs.mapper.CourseArrangeMapper;
+import com.ggs.mapper.CourseMapper;
 import com.ggs.mapper.CourseSelectionMapper;
 import com.ggs.mapper.SemesterMapper;
+import com.ggs.mapper.StudentMapper;
+import com.ggs.pojo.Clazz;
+import com.ggs.pojo.Course;
 import com.ggs.pojo.CourseArrange;
 import com.ggs.pojo.CourseSelection;
 import com.ggs.pojo.Semester;
+import com.ggs.pojo.Student;
+import com.ggs.util.DataScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,9 +41,34 @@ public class CourseSelectionServiceImpl implements CourseSelectionService {
     @Autowired
     private StatusChangeService statusChangeService;
 
+    @Autowired
+    private CourseMapper courseMapper;
+
+    @Autowired
+    private SelectionQuotaService quotaService;
+
+    @Autowired
+    private StudentMapper studentMapper;
+
+    @Autowired
+    private ClazzMapper clazzMapper;
+
+    /** 数据范围校验：学生所属班级院系必须在本人范围内 */
+    private void checkScopeBySid(Integer sid) {
+        if (sid == null) {
+            return;
+        }
+        Student student = studentMapper.getById(sid);
+        if (student == null) {
+            return;
+        }
+        Clazz clazz = clazzMapper.getById(student.getCid());
+        DataScopeUtil.requireInScope(clazz == null ? null : clazz.getDid());
+    }
+
     @Override
     public List<CourseSelection> listAll() {
-        return selectionMapper.listAll();
+        return selectionMapper.listAll(DataScopeUtil.currentDid());
     }
 
     @Override
@@ -48,6 +81,7 @@ public class CourseSelectionServiceImpl implements CourseSelectionService {
         if (sid == null || courseId == null) {
             throw new BusinessException("请选择学生和课程");
         }
+        checkScopeBySid(sid);
         if (selectionMapper.countStudent(sid) == 0) {
             throw new BusinessException("学生不存在");
         }
@@ -99,14 +133,39 @@ public class CourseSelectionServiceImpl implements CourseSelectionService {
         Long uid = JwtInterceptor.UID_HOLDER.get();
         selection.setUid(uid == null ? null : uid.intValue());
         selection.setCreateTime(LocalDateTime.now());
-        selectionMapper.insert(selection);
+
+        // 容量配额：占用名额（Redis 原子扣减 / DB 条件扣减降级）
+        Course course = courseMapper.getById(courseId);
+        int capacity = course == null || course.getCapacity() == null ? 0 : course.getCapacity();
+        SelectionQuotaService.QuotaResult quota =
+                quotaService.tryOccupy(sid, courseId, selection.getSemesterId(), capacity);
+        if (!quota.ok) {
+            throw new BusinessException(quota.message);
+        }
+        try {
+            selectionMapper.insert(selection);
+        } catch (DuplicateKeyException e) {
+            // 唯一索引兜底：并发下重复选课，回补名额
+            quotaService.release(sid, courseId, selection.getSemesterId());
+            throw new BusinessException("该学生已选此课程，请勿重复选课");
+        }
     }
 
     @Override
     public void delete(Integer id) {
-        if (id == null || selectionMapper.delete(id) == 0) {
+        if (id == null) {
             throw new BusinessException("删除失败，选课记录不存在");
         }
+        CourseSelection exist = selectionMapper.getById(id);
+        if (exist == null) {
+            throw new BusinessException("删除失败，选课记录不存在");
+        }
+        checkScopeBySid(exist.getSid());
+        if (selectionMapper.delete(id) == 0) {
+            throw new BusinessException("删除失败，选课记录不存在");
+        }
+        // 退选回补名额
+        quotaService.release(exist.getSid(), exist.getCourseId(), exist.getSemesterId());
     }
 
     @Override

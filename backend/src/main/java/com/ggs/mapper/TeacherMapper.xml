@@ -11,14 +11,32 @@
         <result property="age" column="age"/>
         <result property="title" column="title"/>
         <result property="department" column="department"/>
+        <result property="did" column="did"/>
     </resultMap>
 
     <select id="listTeacher" resultMap="teacherMap">
         SELECT tid, name, age, title, department FROM teacher
+        <if test="did != null">WHERE did = #{did}</if>
+    </select>
+
+    <select id="listByPage" resultMap="teacherMap">
+        SELECT tid, name, age, title, department FROM teacher
+        <if test="did != null">WHERE did = #{did}</if>
+        ORDER BY tid
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM teacher
+        <if test="did != null">WHERE did = #{did}</if>
     </select>
 
     <select id="getTeacherById" resultMap="teacherMap">
         SELECT tid, name, age, title, department FROM teacher WHERE tid = #{tid}
+    </select>
+
+    <select id="getByUsername" resultMap="teacherMap">
+        SELECT tid, username, name, age, title, department, did FROM teacher WHERE username = #{username}
     </select>
 
     <insert id="addTeacher">

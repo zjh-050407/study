@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.StatsMapper">
+
+    <!-- 总览：学生/教师/课程数 + 本学期选课人次 -->
+    <select id="overview" resultType="map">
+        SELECT
+          (SELECT COUNT(*) FROM student) AS studentCount,
+          (SELECT COUNT(*) FROM teacher) AS teacherCount,
+          (SELECT COUNT(*) FROM course) AS courseCount,
+          (SELECT COUNT(*) FROM course_selection cs
+            LEFT JOIN semester sem ON sem.id = cs.semester_id
+            WHERE sem.is_current = 1) AS selectionCount,
+          (SELECT COUNT(*) FROM clazz) AS clazzCount
+    </select>
+
+    <!-- 院系学生分布 -->
+    <select id="studentByDept" resultType="map">
+        SELECT d.name AS name, COUNT(s.sid) AS value
+        FROM department d
+        LEFT JOIN clazz c ON c.did = d.did
+        LEFT JOIN student s ON s.cid = c.cid
+        GROUP BY d.did, d.name
+        ORDER BY value DESC
+    </select>
+
+    <!-- 成绩分段分布 -->
+    <select id="scoreDistribution" resultType="map">
+        SELECT
+          SUM(CASE WHEN total &lt; 60 THEN 1 ELSE 0 END) AS below60,
+          SUM(CASE WHEN total &gt;= 60 AND total &lt; 70 THEN 1 ELSE 0 END) AS s60to70,
+          SUM(CASE WHEN total &gt;= 70 AND total &lt; 80 THEN 1 ELSE 0 END) AS s70to80,
+          SUM(CASE WHEN total &gt;= 80 AND total &lt; 90 THEN 1 ELSE 0 END) AS s80to90,
+          SUM(CASE WHEN total &gt;= 90 THEN 1 ELSE 0 END) AS above90
+        FROM score
+        WHERE total IS NOT NULL
+    </select>
+
+    <!-- 本学期选课热度 Top10 -->
+    <select id="selectionHot" resultType="map">
+        SELECT c.name AS name, COUNT(cs.id) AS value
+        FROM course_selection cs
+        LEFT JOIN course c ON cs.course_id = c.course_id
+        LEFT JOIN semester sem ON sem.id = cs.semester_id
+        WHERE sem.is_current = 1
+        GROUP BY cs.course_id, c.name
+        ORDER BY value DESC
+        LIMIT 10
+    </select>
+
+    <!-- 教师评教均分 Top10（dim1-4 四维平均） -->
+    <select id="evaluationAvg" resultType="map">
+        SELECT t.name AS name, ROUND(AVG((er.dim1 + er.dim2 + er.dim3 + er.dim4) / 4.0), 1) AS value
+        FROM evaluation_record er
+        LEFT JOIN teacher t ON t.tid = er.teacher_uid
+        GROUP BY er.teacher_uid, t.name
+        ORDER BY value DESC
+        LIMIT 10
+    </select>
+
+    <!-- 考务概览：本周考试场次 + 待排考课程数 -->
+    <select id="examOverview" resultType="map">
+        SELECT
+          (SELECT COUNT(*) FROM exam_arrange
+            WHERE exam_date &gt;= CURDATE() AND exam_date &lt; DATE_ADD(CURDATE(), INTERVAL 7 DAY)) AS weekExamCount,
+          (SELECT COUNT(*) FROM teach_task WHERE status = 0) AS pendingTaskCount,
+          (SELECT COUNT(*) FROM exam_arrange) AS totalExamCount
+    </select>
+
+</mapper>

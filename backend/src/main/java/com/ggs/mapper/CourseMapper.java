@@ -8,7 +8,9 @@ import java.util.List;
 
 @Mapper
 public interface CourseMapper {
-    List<Course> listCourse();
+    List<Course> listCourse(@Param("did") Integer did);
+    List<Course> listByPage(@Param("offset") int offset, @Param("size") int size, @Param("did") Integer did);
+    int countAll(@Param("did") Integer did);
     Course getById(@Param("courseId") Integer courseId);
     int add(Course course);
     int update(Course course);

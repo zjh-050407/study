@@ -1,7 +1,9 @@
 package com.ggs.controller;
 
+import com.ggs.mapper.TeacherMapper;
 import com.ggs.pojo.Teacher;
 import com.ggs.service.TeacherService;
+import com.ggs.util.DataScopeUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +18,21 @@ public class TeacherController {
     @Autowired
     private TeacherService teacherService;
 
+    @Autowired
+    private TeacherMapper teacherMapper;
+
     @GetMapping("/list")
-    public ResultVO listTeacher() {
+    public ResultVO listTeacher(@RequestParam(required = false) Integer page,
+                                @RequestParam(required = false) Integer size) {
         RoleCheckUtil.requireRole("professor", "admin");
-        List<Teacher> list = teacherService.listTeacher();
+        Integer did = DataScopeUtil.currentDid();
+        if (page != null && size != null) {
+            int offset = (page - 1) * size;
+            List<Teacher> list = teacherMapper.listByPage(offset, size, did);
+            int total = teacherMapper.countAll(did);
+            return ResultVO.success(new ResultVO.PageResult<>(list, total, page, size));
+        }
+        List<Teacher> list = teacherMapper.listTeacher(did);
         return ResultVO.success(list);
     }
 

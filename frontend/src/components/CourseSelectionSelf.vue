@@ -83,6 +83,18 @@ const statusMap = {
 
 const isApplied = (courseId) => myApplies.value.some(a => a.courseId === courseId && a.status === 0)
 
+const isFull = (course) => {
+  const capacity = Number(course.capacity || 0)
+  const chosen = Number(course.chosenCount || 0)
+  return capacity > 0 && chosen >= capacity
+}
+
+const remainOf = (course) => {
+  const capacity = Number(course.capacity || 0)
+  const chosen = Number(course.chosenCount || 0)
+  return `${capacity - chosen} / ${capacity}`
+}
+
 onMounted(refreshAll)
 </script>
 <template>
@@ -98,6 +110,12 @@ onMounted(refreshAll)
             <el-table-column label="学时" width="70" align="center">
               <template #default="scope">{{ scope.row.hours }}</template>
             </el-table-column>
+            <el-table-column label="余量" width="100" align="center">
+              <template #default="scope">
+                <el-tag v-if="isFull(scope.row)" type="danger" size="small">已满</el-tag>
+                <span v-else class="quota-text">{{ remainOf(scope.row) }}</span>
+              </template>
+            </el-table-column>
             <el-table-column label="任课教师" min-width="120" align="center">
               <template #default="scope">{{ scope.row.teacherNames || '-' }}</template>
             </el-table-column>
@@ -106,9 +124,9 @@ onMounted(refreshAll)
                 <el-button
                     size="small"
                     class="btn-glass-edit"
-                    :disabled="Number(scope.row.selected) > 0"
+                    :disabled="Number(scope.row.selected) > 0 || isFull(scope.row)"
                     @click="selectCourse(scope.row)"
-                >{{ Number(scope.row.selected) > 0 ? '已选' : '选课' }}</el-button>
+                >{{ Number(scope.row.selected) > 0 ? '已选' : (isFull(scope.row) ? '已满' : '选课') }}</el-button>
               </template>
             </el-table-column>
           </el-table>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ggs.mapper.ClassroomMapper">
+
+    <resultMap id="classroomMap" type="com.ggs.pojo.Classroom">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="capacity" column="capacity"/>
+        <result property="type" column="type"/>
+        <result property="building" column="building"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="listByPage" resultMap="classroomMap">
+        SELECT id, name, capacity, type, building, status, create_time
+        FROM classroom
+        ORDER BY id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM classroom
+    </select>
+
+    <select id="getById" resultMap="classroomMap">
+        SELECT id, name, capacity, type, building, status, create_time
+        FROM classroom WHERE id = #{id}
+    </select>
+
+    <select id="countByName" resultType="int">
+        SELECT COUNT(*) FROM classroom
+        WHERE name = #{name}
+        <if test="excludeId != null">AND id != #{excludeId}</if>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO classroom (name, capacity, type, building, status)
+        VALUES (#{name}, #{capacity}, #{type}, #{building}, #{status})
+    </insert>
+
+    <update id="update">
+        UPDATE classroom
+        SET name = #{name}, capacity = #{capacity}, type = #{type},
+            building = #{building}, status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM classroom WHERE id = #{id}
+    </delete>
+
+</mapper>

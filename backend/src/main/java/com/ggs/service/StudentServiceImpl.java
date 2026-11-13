@@ -1,7 +1,10 @@
 package com.ggs.service;
 
+import com.ggs.mapper.ClazzMapper;
 import com.ggs.mapper.StudentMapper;
+import com.ggs.pojo.Clazz;
 import com.ggs.pojo.Student;
+import com.ggs.util.DataScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,7 +18,19 @@ public class StudentServiceImpl implements StudentService {
     @Autowired
     private StudentMapper studentMapper;
 
+    @Autowired
+    private ClazzMapper clazzMapper;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    /** 数据范围校验：学生所属班级院系必须在本人范围内 */
+    private void checkScopeByCid(Integer cid) {
+        if (cid == null) {
+            return;
+        }
+        Clazz clazz = clazzMapper.getById(cid);
+        DataScopeUtil.requireInScope(clazz == null ? null : clazz.getDid());
+    }
 
     @Override
     public List<Student> listStu() {
@@ -24,6 +39,10 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public int delete(Long sid) {
+        Student exist = studentMapper.getById(sid.intValue());
+        if (exist != null) {
+            checkScopeByCid(exist.getCid());
+        }
         return studentMapper.delete(sid);
     }
 
@@ -39,6 +58,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public int addStu(Student student) {
+        checkScopeByCid(student.getCid());
         return studentMapper.addStu(student);
     }
 
@@ -55,6 +75,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public int updateStu(Student student) {
+        checkScopeByCid(student.getCid());
         return studentMapper.updateStu(student);
     }
 
@@ -64,8 +85,8 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public int countStu(String name, String cname) {
-        return studentMapper.countStu(name, cname);
+    public int countStu(String name, String cname, Integer did) {
+        return studentMapper.countStu(name, cname, did);
     }
 
     @Override

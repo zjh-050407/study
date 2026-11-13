@@ -8,6 +8,10 @@ const loading = ref(false)
 const courses = ref([])
 const teachers = ref([])
 const semesters = ref([])
+const classrooms = ref([])
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 
 const dialogVisible = ref(false)
 const saving = ref(false)
@@ -19,19 +23,29 @@ const examTypes = ['期末', '补考', '重修']
 const getData = async () => {
   loading.value = true
   try {
-    const [examResult, courseResult, teacherResult, semesterResult] = await Promise.all([
-      request.get('/exam/list'),
+    const [examResult, courseResult, teacherResult, semesterResult, classroomResult] = await Promise.all([
+      request.get('/exam/list', { params: { page: currentPage.value, size: pageSize.value } }),
       request.get('/course/list'),
       request.get('/teacher/list'),
-      request.get('/semester/list')
+      request.get('/semester/list'),
+      request.get('/classroom/list', { params: { page: 1, size: 500 } })
     ])
-    if (examResult.data.code === 0) list.value = examResult.data.data || []
+    if (examResult.data.code === 0) {
+      list.value = examResult.data.data.list || []
+      total.value = examResult.data.data.total || 0
+    }
     if (courseResult.data.code === 0) courses.value = courseResult.data.data || []
     if (teacherResult.data.code === 0) teachers.value = teacherResult.data.data || []
     if (semesterResult.data.code === 0) semesters.value = semesterResult.data.data || []
+    if (classroomResult.data.code === 0) classrooms.value = classroomResult.data.data.list || []
   } finally {
     loading.value = false
   }
+}
+
+const handlePageChange = (page) => {
+  currentPage.value = page
+  getData()
 }
 
 const currentSemesterId = () => {
@@ -157,6 +171,17 @@ onMounted(getData)
           </template>
         </el-table-column>
       </el-table>
+      <div style="display: flex; justify-content: center; margin-top: 12px;">
+        <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50]"
+            :total="total"
+            layout="total, sizes, prev, pager, next"
+            class="glass-pagination"
+            @current-change="handlePageChange"
+        />
+      </div>
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑考试安排' : '新增考试安排'" width="520" class="glass-dialog">
@@ -183,7 +208,11 @@ onMounted(getData)
           </div>
         </el-form-item>
         <el-form-item label="考场">
-          <el-input v-model="form.room" placeholder="如：A101" class="picker-full" />
+          <el-select v-model="form.room" placeholder="选择或输入考场（如：A101）" class="picker-full" filterable allow-create default-first-option>
+            <el-option v-for="room in classrooms" :key="room.id"
+                       :label="room.name + '（' + room.type + '·' + room.capacity + '座）'"
+                       :value="room.name" />
+          </el-select>
         </el-form-item>
         <el-form-item label="监考教师">
           <el-select v-model="form.invigilatorUid" placeholder="请选择监考教师（可空）" clearable class="picker-full">

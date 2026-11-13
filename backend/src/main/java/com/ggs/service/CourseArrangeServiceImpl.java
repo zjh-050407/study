@@ -2,6 +2,7 @@ package com.ggs.service;
 
 import com.ggs.mapper.CourseArrangeMapper;
 import com.ggs.mapper.SemesterMapper;
+import com.ggs.mapper.TeachTaskMapper;
 import com.ggs.pojo.CourseArrange;
 import com.ggs.pojo.Semester;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,9 @@ public class CourseArrangeServiceImpl implements CourseArrangeService {
     @Autowired
     private SemesterMapper semesterMapper;
 
+    @Autowired
+    private TeachTaskMapper teachTaskMapper;
+
     @Override
     public List<CourseArrange> listArrange() {
         return courseArrangeMapper.listArrange();
@@ -27,13 +31,23 @@ public class CourseArrangeServiceImpl implements CourseArrangeService {
     @Override
     public int add(CourseArrange arrange) {
         applyDefaultSemester(arrange);
-        return courseArrangeMapper.add(arrange);
+        int rows = courseArrangeMapper.add(arrange);
+        // 关联教学任务：排课成功后推进任务状态为已排课
+        if (rows > 0 && arrange.getTaskId() != null) {
+            teachTaskMapper.updateStatus(arrange.getTaskId(), 1);
+        }
+        return rows;
     }
 
     @Override
     public int update(CourseArrange arrange) {
         applyDefaultSemester(arrange);
-        return courseArrangeMapper.update(arrange);
+        int rows = courseArrangeMapper.update(arrange);
+        // 修改排课时如重新关联了新任务，同样推进
+        if (rows > 0 && arrange.getTaskId() != null) {
+            teachTaskMapper.updateStatus(arrange.getTaskId(), 1);
+        }
+        return rows;
     }
 
     /** 学期默认逻辑：null=默认挂当前学期；0=显式未分学期（NULL） */

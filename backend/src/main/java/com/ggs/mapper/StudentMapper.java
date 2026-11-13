@@ -26,9 +26,10 @@ public interface StudentMapper {
     List<Student> listStuByPage(@Param("offset") int offset,
                                  @Param("size") int size,
                                  @Param("name") String name,
-                                 @Param("cname") String cname);
+                                 @Param("cname") String cname,
+                                 @Param("did") Integer did);
 
-    int countStu(@Param("name") String name, @Param("cname") String cname);
+    int countStu(@Param("name") String name, @Param("cname") String cname, @Param("did") Integer did);
 
     int countByClazz(@Param("cid") Integer cid);
 

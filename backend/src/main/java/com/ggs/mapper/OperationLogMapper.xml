@@ -16,4 +16,34 @@
         ORDER BY create_time DESC
     </select>
 
+    <sql id="logWhere">
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="operation != null and operation != ''">
+                AND operation LIKE CONCAT('%', #{operation}, '%')
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND create_time &lt;= #{endTime}
+            </if>
+        </where>
+    </sql>
+
+    <select id="listByPage" resultType="com.ggs.pojo.OperationLog">
+        SELECT id, username, operation, method, params, ip, create_time
+        FROM operation_log
+        <include refid="logWhere"/>
+        ORDER BY create_time DESC, id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countByFilter" resultType="int">
+        SELECT COUNT(*) FROM operation_log
+        <include refid="logWhere"/>
+    </select>
+
 </mapper>

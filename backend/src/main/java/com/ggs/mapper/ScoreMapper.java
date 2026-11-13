@@ -10,6 +10,8 @@ import java.util.Map;
 @Mapper
 public interface ScoreMapper {
     List<Score> listScore();
+    List<Score> listByPage(@Param("offset") int offset, @Param("size") int size, @Param("did") Integer did);
+    int countAll(@Param("did") Integer did);
     List<Score> listByStudent(@Param("sid") Integer sid);
     List<Score> listByCourse(@Param("courseId") Integer courseId);
     int add(Score score);

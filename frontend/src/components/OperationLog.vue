@@ -5,16 +5,26 @@ import { ElMessage } from 'element-plus'
 import { Search, Delete } from "@element-plus/icons-vue";
 
 const tableData = ref([])
-const allData = ref([])
 const loading = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+const searchKeyword = ref('')
+const dateRange = ref([])
 
 const getData = async () => {
   loading.value = true
   try {
-    const result = await request.get('/operationLog/list')
+    const params = { page: currentPage.value, size: pageSize.value }
+    if (searchKeyword.value.trim()) params.username = searchKeyword.value.trim()
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.startTime = dateRange.value[0] + ' 00:00:00'
+      params.endTime = dateRange.value[1] + ' 23:59:59'
+    }
+    const result = await request.get('/operationLog/list', { params })
     if (result.data.code === 0) {
-      allData.value = result.data.data || []
-      tableData.value = allData.value
+      tableData.value = result.data.data.list || []
+      total.value = result.data.data.total || 0
     }
   } catch (err) {
     ElMessage.error('获取操作日志失败')
@@ -25,20 +35,14 @@ const getData = async () => {
 
 onMounted(getData)
 
-const searchKeyword = ref('')
-
 const doSearch = () => {
-  const kw = searchKeyword.value.trim()
-  if (!kw) {
-    tableData.value = allData.value
-    return
-  }
-  tableData.value = allData.value.filter(item =>
-    (item.username && item.username.includes(kw)) ||
-    (item.operation && item.operation.includes(kw)) ||
-    (item.method && item.method.includes(kw)) ||
-    (item.ip && item.ip.includes(kw))
-  )
+  currentPage.value = 1
+  getData()
+}
+
+const handlePageChange = (page) => {
+  currentPage.value = page
+  getData()
 }
 
 const formatTime = (time) => {
@@ -62,7 +66,16 @@ const clearAll = async () => {
             <span class="sub-title">仅管理员可见</span>
           </div>
           <div class="contain-search">
-            <el-input v-model="searchKeyword" style="width: 240px" placeholder="搜索用户/操作/方法/IP" clearable class="glass-input-sm"/>
+            <el-input v-model="searchKeyword" style="width: 220px" placeholder="搜索操作用户" clearable class="glass-input-sm"/>
+            <el-date-picker
+                v-model="dateRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                value-format="YYYY-MM-DD"
+                style="width: 260px"
+            />
             <el-button :icon="Search" @click="doSearch" circle class="btn-glass-icon"/>
             <el-button :icon="Delete" @click="clearAll" circle class="btn-glass-icon" title="清空日志" />
           </div>
@@ -88,6 +101,17 @@ const clearAll = async () => {
           </template>
         </el-table-column>
       </el-table>
+      <div style="display: flex; justify-content: center; margin-top: 12px;">
+        <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50]"
+            :total="total"
+            layout="total, sizes, prev, pager, next"
+            class="glass-pagination"
+            @current-change="handlePageChange"
+        />
+      </div>
     </el-card>
   </div>
 </template>

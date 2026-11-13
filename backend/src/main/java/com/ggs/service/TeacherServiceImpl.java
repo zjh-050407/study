@@ -4,6 +4,7 @@ import com.ggs.mapper.ClazzMapper;
 import com.ggs.mapper.CourseArrangeMapper;
 import com.ggs.mapper.TeacherMapper;
 import com.ggs.pojo.Teacher;
+import com.ggs.util.DataScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     public List<Teacher> listTeacher() {
-        return teacherMapper.listTeacher();
+        return teacherMapper.listTeacher(DataScopeUtil.currentDid());
     }
 
     @Override

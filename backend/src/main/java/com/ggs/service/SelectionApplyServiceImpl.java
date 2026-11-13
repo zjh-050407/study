@@ -3,6 +3,7 @@ package com.ggs.service;
 import com.ggs.exception.BusinessException;
 import com.ggs.mapper.CourseSelectionMapper;
 import com.ggs.mapper.SelectionApplyMapper;
+import com.ggs.pojo.CourseSelection;
 import com.ggs.pojo.SelectionApply;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,9 @@ public class SelectionApplyServiceImpl implements SelectionApplyService {
 
     @Autowired
     private CourseSelectionMapper selectionMapper;
+
+    @Autowired
+    private SelectionQuotaService quotaService;
 
     @Override
     public void apply(Integer sid, Integer courseId, String reason) {
@@ -60,8 +64,14 @@ public class SelectionApplyServiceImpl implements SelectionApplyService {
         if (apply.getStatus() == null || apply.getStatus() != 0) {
             throw new BusinessException("该申请已处理，请勿重复审批");
         }
-        // 删除选课记录（若已被教师代选侧删除则忽略）
+        // 删除选课记录（若已被教师代选侧删除则忽略），并回补名额
+        CourseSelection target = selectionMapper.listByStudent(apply.getSid()).stream()
+                .filter(s -> s.getCourseId() != null && s.getCourseId().equals(apply.getCourseId()))
+                .findFirst().orElse(null);
         selectionMapper.deleteBySidAndCourse(apply.getSid(), apply.getCourseId());
+        if (target != null) {
+            quotaService.release(target.getSid(), target.getCourseId(), target.getSemesterId());
+        }
         applyMapper.updateStatus(id, 1, approveUid, LocalDateTime.now());
     }
 

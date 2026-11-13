@@ -4,6 +4,10 @@ spring:
     password: ${DB_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/student_manager
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   servlet:
     multipart:
       max-file-size: 10MB
@@ -23,6 +27,8 @@ mybatis:
 app:
   upload-path: ./uploads/
   base-url: http://localhost:8082/
+  selection:
+    redis-enabled: ${SELECTION_REDIS_ENABLED:true}
   jwt:
     secret: ${JWT_SECRET:Vx8#pQ2@zL7!mR4%tN6&kY9(wC3^fH5)dB1*sJ0%eG8}
     expire: ${JWT_EXPIRE:86400000}

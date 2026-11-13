@@ -4,8 +4,10 @@ import com.alibaba.excel.EasyExcel;
 import com.ggs.annotation.OperationLogAnnotation;
 import com.ggs.dto.ScoreExportDTO;
 import com.ggs.interceptor.JwtInterceptor;
+import com.ggs.mapper.ScoreMapper;
 import com.ggs.pojo.Score;
 import com.ggs.service.ScoreService;
+import com.ggs.util.DataScopeUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,8 +29,19 @@ public class ScoreController {
     @Autowired
     private ScoreService scoreService;
 
+    @Autowired
+    private ScoreMapper scoreMapper;
+
     @GetMapping("/list")
-    public ResultVO listScore() {
+    public ResultVO listScore(@RequestParam(required = false) Integer page,
+                              @RequestParam(required = false) Integer size) {
+        Integer did = DataScopeUtil.currentDid();
+        if (page != null && size != null) {
+            int offset = (page - 1) * size;
+            List<Score> list = scoreMapper.listByPage(offset, size, did);
+            int total = scoreMapper.countAll(did);
+            return ResultVO.success(new ResultVO.PageResult<>(list, total, page, size));
+        }
         List<Score> list = scoreService.listScore();
         return ResultVO.success(list);
     }

@@ -19,4 +19,6 @@ public class CourseArrange {
     private String courseName;
     private String teacherName;
     private String semesterName;
+    // 关联教学任务（批次J：排课成功后推进任务状态，不落库）
+    private Integer taskId;
 }

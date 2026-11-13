@@ -18,7 +18,10 @@ import {
   Timer,
   Finished,
   Collection,
-  Switch
+  Switch,
+  House,
+  Aim,
+  DataAnalysis
 } from '@element-plus/icons-vue'
 import { ref, onMounted } from "vue"
 import { ElMessage } from 'element-plus'
@@ -106,6 +109,10 @@ const handleCommand = (command) => {
                 <el-icon><Notebook /></el-icon>
                 <span>教学管理</span>
               </template>
+              <el-menu-item index="/home/analytics" v-if="role === 'professor' || role === 'admin'">
+                <el-icon><DataAnalysis /></el-icon>
+                <span>数据分析</span>
+              </el-menu-item>
               <el-menu-item index="/home/course">课程管理</el-menu-item>
               <el-menu-item index="/home/semester" v-if="role === 'professor' || role === 'admin'">学期管理</el-menu-item>
               <el-menu-item index="/home/courseArrange">排课管理</el-menu-item>
@@ -137,6 +144,14 @@ const handleCommand = (command) => {
               <el-menu-item index="/home/statusChange" v-if="role === 'professor' || role === 'admin'">
                 <el-icon><Switch /></el-icon>
                 <span>学籍异动</span>
+              </el-menu-item>
+              <el-menu-item index="/home/teachTask" v-if="role === 'professor' || role === 'admin'">
+                <el-icon><Aim /></el-icon>
+                <span>教学任务</span>
+              </el-menu-item>
+              <el-menu-item index="/home/classroom" v-if="role === 'professor' || role === 'admin'">
+                <el-icon><House /></el-icon>
+                <span>教室管理</span>
               </el-menu-item>
             </el-sub-menu>
             <el-menu-item index="/home/systemInit" v-if="role === 'admin'">

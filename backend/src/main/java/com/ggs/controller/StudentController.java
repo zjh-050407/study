@@ -8,6 +8,7 @@ import com.ggs.mapper.ClazzMapper;
 import com.ggs.mapper.StudentMapper;
 import com.ggs.pojo.Clazz;
 import com.ggs.pojo.Student;
+import com.ggs.util.DataScopeUtil;
 import com.ggs.service.StudentService;
 import com.ggs.interceptor.JwtInterceptor;
 import com.ggs.util.RoleCheckUtil;
@@ -40,8 +41,9 @@ public class StudentController {
                             @RequestParam(required = false) String name,
                             @RequestParam(required = false) String cname) {
         int offset = (page - 1) * size;
-        List<Student> list = studentMapper.listStuByPage(offset, size, name, cname);
-        int total = studentService.countStu(name, cname);
+        Integer did = DataScopeUtil.currentDid();
+        List<Student> list = studentMapper.listStuByPage(offset, size, name, cname, did);
+        int total = studentService.countStu(name, cname, did);
         return ResultVO.success(new ResultVO.PageResult<>(list, total, page, size));
     }
 
@@ -153,7 +155,7 @@ public class StudentController {
     @PostMapping("/student/import")
     public ResultVO importStudent(@RequestParam("file") MultipartFile file) throws IOException {
         RoleCheckUtil.requireRole("professor", "admin");
-        List<Clazz> clazzList = clazzMapper.listClazz();
+        List<Clazz> clazzList = clazzMapper.listClazz(DataScopeUtil.currentDid());
         StudentImportListener listener = new StudentImportListener(clazzList);
         EasyExcel.read(file.getInputStream(), StudentImportDTO.class, listener).sheet().doRead();
         listener.validateAll();

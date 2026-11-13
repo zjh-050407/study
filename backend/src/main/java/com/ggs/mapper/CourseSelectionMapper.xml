@@ -28,6 +28,7 @@
         LEFT JOIN clazz cl ON st.cid = cl.cid
         LEFT JOIN course c ON cs.course_id = c.course_id
         LEFT JOIN semester sem ON sem.id = cs.semester_id
+        <if test="did != null">WHERE cl.did = #{did}</if>
         ORDER BY cs.id DESC
     </select>
 
@@ -42,6 +43,18 @@
         LEFT JOIN semester sem ON sem.id = cs.semester_id
         WHERE cs.sid = #{sid}
         ORDER BY cs.id DESC
+    </select>
+
+    <select id="getById" resultMap="selectionMap">
+        SELECT cs.id, cs.sid, cs.course_id, cs.semester_id, cs.uid, cs.create_time,
+               st.name AS student_name, cl.name AS clazz_name,
+               c.name AS course_name, c.credit, sem.name AS semester_name
+        FROM course_selection cs
+        LEFT JOIN student st ON cs.sid = st.sid
+        LEFT JOIN clazz cl ON st.cid = cl.cid
+        LEFT JOIN course c ON cs.course_id = c.course_id
+        LEFT JOIN semester sem ON sem.id = cs.semester_id
+        WHERE cs.id = #{id}
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
@@ -82,6 +95,9 @@
 
     <select id="listCourseOptions" resultType="map">
         SELECT c.course_id AS courseId, c.name, c.credit, c.hours,
+               c.capacity AS capacity,
+               (SELECT COUNT(*) FROM course_selection cs2
+                 WHERE cs2.course_id = c.course_id) AS chosenCount,
                (SELECT COUNT(*) FROM course_selection cs2
                  WHERE cs2.course_id = c.course_id AND cs2.sid = #{sid}) AS selected,
                (SELECT GROUP_CONCAT(DISTINCT t.name) FROM course_arrange a2

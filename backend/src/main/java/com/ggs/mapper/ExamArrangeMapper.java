@@ -13,6 +13,10 @@ public interface ExamArrangeMapper {
 
     List<ExamArrange> listAll();
 
+    List<ExamArrange> listByPage(@Param("offset") int offset, @Param("size") int size);
+
+    int countAll();
+
     int insert(ExamArrange exam);
 
     int update(ExamArrange exam);

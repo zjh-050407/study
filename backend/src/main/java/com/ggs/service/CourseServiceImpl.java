@@ -4,6 +4,7 @@ import com.ggs.mapper.CourseArrangeMapper;
 import com.ggs.mapper.CourseMapper;
 import com.ggs.mapper.ScoreMapper;
 import com.ggs.pojo.Course;
+import com.ggs.util.DataScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public List<Course> listCourse() {
-        return courseMapper.listCourse();
+        return courseMapper.listCourse(DataScopeUtil.currentDid());
     }
 
     @Override
@@ -33,12 +34,21 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public int add(Course course) {
+        normalizeCapacity(course);
         return courseMapper.add(course);
     }
 
     @Override
     public int update(Course course) {
+        normalizeCapacity(course);
         return courseMapper.update(course);
+    }
+
+    /** 容量默认 50；非法值回退默认（选课容量控制阶段会再严格校验） */
+    private void normalizeCapacity(Course course) {
+        if (course.getCapacity() == null || course.getCapacity() < 1) {
+            course.setCapacity(50);
+        }
     }
 
     @Override

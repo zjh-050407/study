@@ -12,4 +12,5 @@ public class Course {
     private String name;
     private Double credit;
     private Integer hours;
+    private Integer capacity;
 }

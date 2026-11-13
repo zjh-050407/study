@@ -25,6 +25,9 @@ import EvaluationSelf from "@/components/EvaluationSelf.vue";
 import EvaluationManager from "@/components/EvaluationManager.vue";
 import ExamArrangeManager from "@/components/ExamArrangeManager.vue";
 import GraduateAuditManager from "@/components/GraduateAuditManager.vue";
+import ClassroomManager from "@/components/ClassroomManager.vue";
+import TeachTaskManager from "@/components/TeachTaskManager.vue";
+import AnalyticsDashboard from "@/components/AnalyticsDashboard.vue";
 import StuExam from "@/components/StuExam.vue";
 import TrainingPlanManager from "@/components/TrainingPlanManager.vue";
 import StatusChangeManager from "@/components/StatusChangeManager.vue";
@@ -40,6 +43,9 @@ const routeRoleMap = {
   '/home/evaluation': ['professor', 'admin'],
   '/home/examArrange': ['professor', 'admin'],
   '/home/graduateAudit': ['professor', 'admin'],
+  '/home/classroom': ['professor', 'admin'],
+  '/home/teachTask': ['professor', 'admin'],
+  '/home/analytics': ['professor', 'admin'],
   '/home/trainingPlan': ['professor', 'admin'],
   '/home/statusChange': ['professor', 'admin'],
 }
@@ -74,6 +80,9 @@ const routes = [
             { path: "evaluation", component: EvaluationManager },
             { path: "examArrange", component: ExamArrangeManager },
             { path: "graduateAudit", component: GraduateAuditManager },
+            { path: "classroom", component: ClassroomManager },
+            { path: "teachTask", component: TeachTaskManager },
+            { path: "analytics", component: AnalyticsDashboard },
             { path: "trainingPlan", component: TrainingPlanManager },
             { path: "statusChange", component: StatusChangeManager },
         ]

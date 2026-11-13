@@ -1,10 +1,15 @@
 package com.ggs.service;
 
 import com.ggs.exception.BusinessException;
+import com.ggs.mapper.ClazzMapper;
 import com.ggs.mapper.ScoreMapper;
 import com.ggs.mapper.SemesterMapper;
+import com.ggs.mapper.StudentMapper;
+import com.ggs.pojo.Clazz;
 import com.ggs.pojo.Score;
 import com.ggs.pojo.Semester;
+import com.ggs.pojo.Student;
+import com.ggs.util.DataScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +25,25 @@ public class ScoreServiceImpl implements ScoreService {
 
     @Autowired
     private SemesterMapper semesterMapper;
+
+    @Autowired
+    private StudentMapper studentMapper;
+
+    @Autowired
+    private ClazzMapper clazzMapper;
+
+    /** 数据范围校验：成绩所属学生班级院系必须在本人范围内 */
+    private void checkScopeBySid(Integer sid) {
+        if (sid == null) {
+            return;
+        }
+        Student student = studentMapper.getById(sid);
+        if (student == null) {
+            return;
+        }
+        Clazz clazz = clazzMapper.getById(student.getCid());
+        DataScopeUtil.requireInScope(clazz == null ? null : clazz.getDid());
+    }
 
     @Override
     public List<Score> listScore() {
@@ -38,6 +62,7 @@ public class ScoreServiceImpl implements ScoreService {
 
     @Override
     public int add(Score score) {
+        checkScopeBySid(score.getSid());
         validateScoreRange(score);
         applyDefaultSemester(score);
         validateDuplicate(score.getSid(), score.getCourseId(), score.getSemesterId(), null);
@@ -47,6 +72,7 @@ public class ScoreServiceImpl implements ScoreService {
 
     @Override
     public int update(Score score) {
+        checkScopeBySid(score.getSid());
         validateScoreRange(score);
         applyDefaultSemester(score);
         validateDuplicate(score.getSid(), score.getCourseId(), score.getSemesterId(), score.getScoreId());

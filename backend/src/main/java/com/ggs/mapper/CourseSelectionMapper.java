@@ -9,7 +9,8 @@ import java.util.Map;
 
 @Mapper
 public interface CourseSelectionMapper {
-    List<CourseSelection> listAll();
+    List<CourseSelection> listAll(@Param("did") Integer did);
+    CourseSelection getById(@Param("id") Integer id);
 
     List<CourseSelection> listByStudent(@Param("sid") Integer sid);
 

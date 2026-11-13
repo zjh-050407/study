@@ -8,7 +8,9 @@ import java.util.List;
 
 @Mapper
 public interface ClazzMapper {
-    List<Clazz> listClazz();
+    List<Clazz> listClazz(@Param("did") Integer did);
+    List<Clazz> listByPage(@Param("offset") int offset, @Param("size") int size, @Param("did") Integer did);
+    int countAll(@Param("did") Integer did);
     Clazz getById(@Param("cid") Integer cid);
     int add(Clazz clazz);
     int update(Clazz clazz);

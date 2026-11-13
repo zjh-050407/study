@@ -1,7 +1,9 @@
 package com.ggs.controller;
 
+import com.ggs.mapper.CourseMapper;
 import com.ggs.pojo.Course;
 import com.ggs.service.CourseService;
+import com.ggs.util.DataScopeUtil;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +18,20 @@ public class CourseController {
     @Autowired
     private CourseService courseService;
 
+    @Autowired
+    private CourseMapper courseMapper;
+
     @GetMapping("/list")
-    public ResultVO listCourse() {
-        List<Course> list = courseService.listCourse();
+    public ResultVO listCourse(@RequestParam(required = false) Integer page,
+                               @RequestParam(required = false) Integer size) {
+        Integer did = DataScopeUtil.currentDid();
+        if (page != null && size != null) {
+            int offset = (page - 1) * size;
+            List<Course> list = courseMapper.listByPage(offset, size, did);
+            int total = courseMapper.countAll(did);
+            return ResultVO.success(new ResultVO.PageResult<>(list, total, page, size));
+        }
+        List<Course> list = courseMapper.listCourse(did);
         return ResultVO.success(list);
     }
 

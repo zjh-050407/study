@@ -31,6 +31,22 @@
         ORDER BY e.exam_date, e.start_section, e.id
     </select>
 
+    <select id="listByPage" resultMap="examMap">
+        SELECT e.id, e.course_id, e.semester_id, e.exam_date, e.start_section, e.end_section,
+               e.room, e.invigilator_uid, e.type,
+               c.name AS course_name, sem.name AS semester_name, t.name AS invigilator_name
+        FROM exam_arrange e
+        LEFT JOIN course c ON e.course_id = c.course_id
+        LEFT JOIN semester sem ON sem.id = e.semester_id
+        LEFT JOIN teacher t ON t.tid = e.invigilator_uid
+        ORDER BY e.exam_date, e.start_section, e.id
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM exam_arrange
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO exam_arrange (course_id, semester_id, exam_date, start_section, end_section,
                                   room, invigilator_uid, type)

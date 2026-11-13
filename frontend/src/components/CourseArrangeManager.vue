@@ -8,6 +8,7 @@ const tableData = ref([])
 const courseList = ref([])
 const teacherList = ref([])
 const semesterList = ref([])
+const taskList = ref([])
 const loading = ref(false)
 
 const currentSemesterId = () => {
@@ -18,11 +19,12 @@ const currentSemesterId = () => {
 const getData = async () => {
   loading.value = true
   try {
-    const [arrangeRes, courseRes, teacherRes, semesterRes] = await Promise.all([
+    const [arrangeRes, courseRes, teacherRes, semesterRes, taskRes] = await Promise.all([
       request.get('/courseArrange/list'),
       request.get('/course/list'),
       request.get('/teacher/list'),
-      request.get('/semester/list')
+      request.get('/semester/list'),
+      request.get('/teachTask/undone')
     ])
     if (arrangeRes.data.code === 0) {
       tableData.value = arrangeRes.data.data
@@ -35,6 +37,9 @@ const getData = async () => {
     }
     if (semesterRes.data.code === 0) {
       semesterList.value = semesterRes.data.data || []
+    }
+    if (taskRes.data.code === 0) {
+      taskList.value = taskRes.data.data || []
     }
   } catch (err) {
     console.error('获取数据失败:', err)
@@ -54,6 +59,7 @@ const form = ref({
   weekDay: 1,
   section: 1,
   semesterId: null,
+  taskId: null,
 })
 
 const editForm = ref({
@@ -64,6 +70,7 @@ const editForm = ref({
   weekDay: 1,
   section: 1,
   semesterId: null,
+  taskId: null,
 })
 
 const weekDayOptions = [
@@ -208,6 +215,16 @@ const handleDelete = async (index, row) => {
             <el-option label="未分学期" :value="0" />
           </el-select>
         </el-form-item>
+        <el-form-item label="关联教学任务">
+          <el-select v-model="form.taskId" placeholder="可选：关联未排课教学任务" clearable class="glass-select" style="width: 100%">
+            <el-option
+              v-for="item in taskList"
+              :key="item.id"
+              :label="item.courseName + '·' + item.clazzName"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="授课教师" required>
           <el-select v-model="form.tid" placeholder="请选择教师" class="glass-select" style="width: 100%">
             <el-option
@@ -269,6 +286,16 @@ const handleDelete = async (index, row) => {
               :value="item.id"
             />
             <el-option label="未分学期" :value="0" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关联教学任务">
+          <el-select v-model="editForm.taskId" placeholder="可选：关联未排课教学任务" clearable class="glass-select" style="width: 100%">
+            <el-option
+              v-for="item in taskList"
+              :key="item.id"
+              :label="item.courseName + '·' + item.clazzName"
+              :value="item.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="授课教师" required>

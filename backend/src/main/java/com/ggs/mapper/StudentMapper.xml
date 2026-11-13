@@ -91,6 +91,9 @@
             <if test="cname != null and cname != ''">
                 AND c.name LIKE CONCAT('%', #{cname}, '%')
             </if>
+            <if test="did != null">
+                AND c.did = #{did}
+            </if>
         </where>
     </sql>
 

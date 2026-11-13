@@ -13,4 +13,5 @@ public class Teacher {
     private Integer age;
     private String title;
     private String department;
+    private Integer did;
 }

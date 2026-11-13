@@ -2,12 +2,15 @@ package com.ggs.controller;
 
 import com.ggs.annotation.OperationLogAnnotation;
 import com.ggs.interceptor.JwtInterceptor;
+import com.ggs.mapper.ExamArrangeMapper;
 import com.ggs.pojo.ExamArrange;
 import com.ggs.service.ExamArrangeService;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/exam")
@@ -16,11 +19,21 @@ public class ExamController {
     @Autowired
     private ExamArrangeService examService;
 
+    @Autowired
+    private ExamArrangeMapper examMapper;
+
     /* ==================== 教师/管理员：考务排考 ==================== */
 
     @GetMapping("/list")
-    public ResultVO list() {
+    public ResultVO list(@RequestParam(required = false) Integer page,
+                         @RequestParam(required = false) Integer size) {
         RoleCheckUtil.requireRole("professor", "admin");
+        if (page != null && size != null) {
+            int offset = (page - 1) * size;
+            List<ExamArrange> list = examMapper.listByPage(offset, size);
+            int total = examMapper.countAll();
+            return ResultVO.success(new ResultVO.PageResult<>(list, total, page, size));
+        }
         return ResultVO.success(examService.listAll());
     }
 
