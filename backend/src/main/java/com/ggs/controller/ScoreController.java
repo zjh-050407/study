@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -35,14 +36,15 @@ public class ScoreController {
 
     @GetMapping("/list")
     public ResultVO listScore(@RequestParam(required = false) Integer page,
-                              @RequestParam(required = false) Integer size) {
+                              @RequestParam(required = false) Integer size,
+                              @RequestParam(required = false) Integer status) {
         Integer did = DataScopeUtil.currentDid();
         if (page != null && size != null) {
             page = PageUtil.clampPage(page);
             size = PageUtil.clampSize(size);
             int offset = (page - 1) * size;
-            List<Score> list = scoreMapper.listByPage(offset, size, did);
-            int total = scoreMapper.countAll(did);
+            List<Score> list = scoreMapper.listByPage(offset, size, did, status);
+            int total = scoreMapper.countAll(did, status);
             return ResultVO.success(new ResultVO.PageResult<>(list, total, page, size));
         }
         List<Score> list = scoreService.listScore();
@@ -91,6 +93,73 @@ public class ScoreController {
     public ResultVO deleteScore(@PathVariable Integer scoreId) {
         RoleCheckUtil.requireRole("professor", "admin");
         scoreService.delete(scoreId);
+        return ResultVO.success();
+    }
+
+    /* ==================== 批次N：成绩流程 ==================== */
+
+    /** 批量提交：草稿 -> 待审核 */
+    @OperationLogAnnotation("提交成绩")
+    @PostMapping("/submit")
+    public ResultVO submit(@RequestBody Map<String, Object> body) {
+        RoleCheckUtil.requireRole("professor", "admin");
+        @SuppressWarnings("unchecked")
+        List<Integer> ids = (List<Integer>) body.get("scoreIds");
+        int count = scoreService.submit(ids);
+        return ResultVO.success("已提交 " + count + " 条成绩");
+    }
+
+    /** 批量发布：待审核 -> 已发布，并通知学生 */
+    @OperationLogAnnotation("发布成绩")
+    @PostMapping("/publish")
+    public ResultVO publish(@RequestBody Map<String, Object> body) {
+        RoleCheckUtil.requireRole("professor", "admin");
+        @SuppressWarnings("unchecked")
+        List<Integer> ids = (List<Integer>) body.get("scoreIds");
+        int count = scoreService.publish(ids);
+        return ResultVO.success("已发布 " + count + " 条成绩");
+    }
+
+    /** 学生申诉：已发布 -> 复核中 */
+    @OperationLogAnnotation("发起成绩复核")
+    @PostMapping("/appeal")
+    public ResultVO appeal(@RequestBody Map<String, Object> body) {
+        RoleCheckUtil.requireRole("student");
+        Long uid = JwtInterceptor.UID_HOLDER.get();
+        int sid = uid == null ? -1 : uid.intValue();
+        Integer scoreId = body.get("scoreId") == null ? null : Integer.valueOf(String.valueOf(body.get("scoreId")));
+        String reason = body.get("reason") == null ? "" : String.valueOf(body.get("reason"));
+        scoreService.appeal(scoreId, sid, reason);
+        return ResultVO.success("复核申请已提交");
+    }
+
+    /** 学生本人申诉记录 */
+    @GetMapping("/appeal/my")
+    public ResultVO appealMy() {
+        RoleCheckUtil.requireRole("student");
+        Long uid = JwtInterceptor.UID_HOLDER.get();
+        int sid = uid == null ? -1 : uid.intValue();
+        return ResultVO.success(scoreService.listAppealByStudent(sid));
+    }
+
+    /** 管理端待处理申诉 */
+    @GetMapping("/appeal/pending")
+    public ResultVO appealPending() {
+        RoleCheckUtil.requireRole("professor", "admin");
+        return ResultVO.success(scoreService.listAppealPending());
+    }
+
+    /** 复核处理：approve/reject */
+    @OperationLogAnnotation("处理成绩复核")
+    @PutMapping("/appeal/handle")
+    public ResultVO appealHandle(@RequestBody Map<String, Object> body) {
+        RoleCheckUtil.requireRole("professor", "admin");
+        Integer appealId = body.get("appealId") == null ? null : Integer.valueOf(String.valueOf(body.get("appealId")));
+        String action = body.get("action") == null ? "" : String.valueOf(body.get("action"));
+        Double newTotal = body.get("newTotal") == null ? null : Double.valueOf(String.valueOf(body.get("newTotal")));
+        String handleNote = body.get("handleNote") == null ? null : String.valueOf(body.get("handleNote"));
+        Long uid = JwtInterceptor.UID_HOLDER.get();
+        scoreService.handleAppeal(appealId, action, newTotal, handleNote, uid);
         return ResultVO.success();
     }
 

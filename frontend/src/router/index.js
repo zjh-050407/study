@@ -35,6 +35,7 @@ import MessageCenter from "@/components/MessageCenter.vue";
 import CalendarManager from "@/components/CalendarManager.vue";
 import TeacherSchedule from "@/components/TeacherSchedule.vue";
 import ClassroomSchedule from "@/components/ClassroomSchedule.vue";
+import PrintCertificate from "@/components/PrintCertificate.vue";
 import { ElMessage } from 'element-plus'
 
 const routeRoleMap = {
@@ -110,6 +111,7 @@ const routes = [
             { path: "selection", component: CourseSelectionSelf },
             { path: "evaluation", component: EvaluationSelf },
             { path: "exam", component: StuExam },
+            { path: "certificate", component: PrintCertificate },
         ]
     },
     {

@@ -33,6 +33,8 @@ public class Score {
 
     private Double total;
     private Double gp;
+    /** 成绩状态：0草稿/1待审核/2已发布/3复核中（批次N成绩流程） */
+    private Integer status;
     // 关联字段
     private String studentName;
     private String courseName;

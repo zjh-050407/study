@@ -10,7 +10,8 @@ import {
   Document,
   School,
   Remove,
-  ArrowDown
+  ArrowDown,
+  Printer
 } from '@element-plus/icons-vue'
 import { useRouter } from "vue-router";
 import request from "@/utils/request.js";
@@ -108,6 +109,10 @@ const handleCommand = async (command) => {
             <el-menu-item index="/stu/exam">
               <el-icon><Document /></el-icon>
               <span>考试安排</span>
+            </el-menu-item>
+            <el-menu-item index="/stu/certificate">
+              <el-icon><Printer /></el-icon>
+              <span>证明打印</span>
             </el-menu-item>
           </el-menu>
         </el-aside>

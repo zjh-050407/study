@@ -1,6 +1,7 @@
 <script setup>
 import request from "@/utils/request.js";
 import { ref, onMounted } from "vue";
+import { ElMessage } from 'element-plus'
 
 const loading = ref(false)
 const scoreList = ref([])
@@ -8,6 +9,11 @@ const gpa = ref(0)
 const totalCredit = ref(0)
 const semesterOptions = ref([])
 const semesterId = ref('ALL')
+
+// 批次N：成绩申诉
+const appealDialogVisible = ref(false)
+const appealForm = ref({ scoreId: null, courseName: '', reason: '' })
+const appealList = ref([])
 
 const getSemesters = async () => {
   try {
@@ -42,6 +48,15 @@ const getScores = async () => {
   }
 }
 
+const getAppeals = async () => {
+  try {
+    const result = await request.get('/score/appeal/my')
+    if (result.data.code === 0) {
+      appealList.value = result.data.data || []
+    }
+  } catch (e) {}
+}
+
 const handleSemesterChange = () => getScores()
 
 const gpTag = (gp) => {
@@ -51,9 +66,37 @@ const gpTag = (gp) => {
   return 'danger'
 }
 
+const openAppeal = (row) => {
+  appealForm.value = { scoreId: row.scoreId, courseName: row.courseName, reason: '' }
+  appealDialogVisible.value = true
+}
+
+const submitAppeal = async () => {
+  if (!appealForm.value.reason.trim()) {
+    ElMessage.warning('请填写申诉理由')
+    return
+  }
+  const result = await request.post('/score/appeal', {
+    scoreId: appealForm.value.scoreId,
+    reason: appealForm.value.reason.trim(),
+  })
+  if (result.data.code === 0) {
+    appealDialogVisible.value = false
+    ElMessage.success('复核申请已提交，请等待处理')
+    getScores()
+    getAppeals()
+  } else {
+    ElMessage.error(result.data.message || '提交失败')
+  }
+}
+
+const appealStatusLabel = { 0: '待处理', 1: '已通过', 2: '已驳回' }
+const appealStatusType = { 0: 'warning', 1: 'success', 2: 'danger' }
+
 onMounted(async () => {
   await getSemesters()
   getScores()
+  getAppeals()
 })
 </script>
 <template>
@@ -98,8 +141,50 @@ onMounted(async () => {
         <el-table-column label="学期" width="160" align="center">
           <template #default="scope">{{ scope.row.semesterName || '未分学期' }}</template>
         </el-table-column>
+        <el-table-column label="状态" width="90" align="center">
+          <template #default="scope">
+            <el-tag v-if="scope.row.status === 3" type="danger" size="small">复核中</el-tag>
+            <el-tag v-else type="success" size="small">已发布</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" align="center" fixed="right">
+          <template #default="scope">
+            <el-button v-if="scope.row.status === 2" size="small" type="warning" plain @click="openAppeal(scope.row)">申诉</el-button>
+            <span v-else class="muted-tip">处理中</span>
+          </template>
+        </el-table-column>
       </el-table>
     </el-card>
+
+    <el-card class="glass-card list-card" shadow="never">
+      <template #header>
+        <span class="appeal-title">我的申诉记录</span>
+      </template>
+      <el-table :data="appealList" class="glass-table" empty-text="暂无申诉记录">
+        <el-table-column prop="courseName" label="课程" width="160" />
+        <el-table-column prop="reason" label="申诉理由" min-width="220" show-overflow-tooltip />
+        <el-table-column label="状态" width="90" align="center">
+          <template #default="scope">
+            <el-tag :type="appealStatusType[scope.row.status] || 'info'" size="small">{{ appealStatusLabel[scope.row.status] || '未知' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="新总评" width="80" align="center">
+          <template #default="scope">{{ scope.row.newTotal ?? '-' }}</template>
+        </el-table-column>
+        <el-table-column prop="handleNote" label="处理意见" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="createTime" label="申请时间" width="170" />
+      </el-table>
+    </el-card>
+
+    <el-dialog v-model="appealDialogVisible" title="申请成绩复核" width="460" :close-on-click-modal="false">
+      <div class="appeal-course">课程：{{ appealForm.courseName }}</div>
+      <el-input v-model="appealForm.reason" type="textarea" :rows="4" maxlength="500" show-word-limit
+                placeholder="请填写申诉理由（如：对期末成绩有疑问）" />
+      <template #footer>
+        <el-button @click="appealDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitAppeal">提交申请</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 <style scoped>
@@ -113,6 +198,21 @@ onMounted(async () => {
 .summary-card, .list-card {
   width: 100%;
   max-width: 900px;
+}
+.appeal-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.muted-tip {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.appeal-course {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  font-weight: 600;
 }
 .glass-card {
   background: var(--glass-bg-strong);

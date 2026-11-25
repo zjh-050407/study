@@ -4,16 +4,28 @@ import { ref, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, Download } from "@element-plus/icons-vue";
 
+const activeTab = ref('all')
+const statusFilter = ref(null)
 const tableData = ref([])
 const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+const selectedRows = ref([])
+
+const statusMap = { 0: '草稿', 1: '待审核', 2: '已发布', 3: '复核中' }
+const statusTagType = { 0: 'info', 1: 'warning', 2: 'success', 3: 'danger' }
 
 const getData = async () => {
   loading.value = true
   try {
-    const result = await request.get('/score/list', { params: { page: currentPage.value, size: pageSize.value } })
+    const params = { page: currentPage.value, size: pageSize.value }
+    if (activeTab.value === 'submitted') {
+      params.status = 1
+    } else if (activeTab.value === 'all' && statusFilter.value !== null) {
+      params.status = statusFilter.value
+    }
+    const result = await request.get('/score/list', { params })
     if (result.data.code === 0) {
       tableData.value = result.data.data.list
       total.value = result.data.data.total
@@ -24,11 +36,19 @@ const getData = async () => {
     loading.value = false
   }
 }
-getData()
 
 const handlePageChange = (page) => {
   currentPage.value = page
   getData()
+}
+
+const switchTab = () => {
+  currentPage.value = 1
+  if (activeTab.value === 'appeal') {
+    getAppeals()
+  } else {
+    getData()
+  }
 }
 
 const searchKeyword = ref('')
@@ -79,7 +99,6 @@ const doSearch = async () => {
 
 const dialogFormVisible = ref(false)
 const addVisible = ref(false)
-const formLabelWidth = '100px'
 
 const form = ref({
   scoreId: '',
@@ -106,6 +125,7 @@ const currentSemesterId = () => {
 }
 
 onMounted(async () => {
+  getData()
   try {
     const [stuRes, courseRes, semesterRes] = await Promise.all([
       request.get('/list', { params: { page: 1, size: 1000 } }),
@@ -139,7 +159,7 @@ const editConfirm = async () => {
     await getData()
     ElMessage.success("更新成功")
   } else {
-    ElMessage.error("更新失败")
+    ElMessage.error(result.data.message || "更新失败")
   }
 }
 
@@ -155,7 +175,78 @@ const addConfirm = async () => {
     await getData()
     ElMessage.success("新增成功")
   } else {
-    ElMessage.error("新增失败")
+    ElMessage.error(result.data.message || "新增失败")
+  }
+}
+
+/* ==================== 批次N：成绩流程操作 ==================== */
+
+const submitScores = async (rows) => {
+  const ids = (rows || selectedRows.value).map(r => r.scoreId)
+  if (ids.length === 0) {
+    ElMessage.warning('请先勾选要提交的成绩')
+    return
+  }
+  const result = await request.post('/score/submit', { scoreIds: ids })
+  if (result.data.code === 0) {
+    ElMessage.success(result.data.data || '提交成功')
+    selectedRows.value = []
+    getData()
+  } else {
+    ElMessage.error(result.data.message || '提交失败')
+  }
+}
+
+const publishScores = async (rows) => {
+  const ids = (rows || selectedRows.value).map(r => r.scoreId)
+  if (ids.length === 0) {
+    ElMessage.warning('请先勾选要发布的成绩')
+    return
+  }
+  const result = await request.post('/score/publish', { scoreIds: ids })
+  if (result.data.code === 0) {
+    ElMessage.success(result.data.data || '发布成功')
+    selectedRows.value = []
+    getData()
+  } else {
+    ElMessage.error(result.data.message || '发布失败')
+  }
+}
+
+/* ==================== 复核申诉 ==================== */
+
+const appealList = ref([])
+const appealLoading = ref(false)
+const appealDialogVisible = ref(false)
+const appealHandleForm = ref({ appealId: null, action: 'approve', newTotal: null, handleNote: '' })
+
+const getAppeals = async () => {
+  appealLoading.value = true
+  try {
+    const result = await request.get('/score/appeal/pending')
+    if (result.data.code === 0) {
+      appealList.value = result.data.data || []
+    }
+  } catch (e) {
+    ElMessage.error('加载申诉列表失败')
+  } finally {
+    appealLoading.value = false
+  }
+}
+
+const openAppealHandle = (row) => {
+  appealHandleForm.value = { appealId: row.id, action: 'approve', newTotal: row.total, handleNote: '' }
+  appealDialogVisible.value = true
+}
+
+const confirmAppealHandle = async () => {
+  const result = await request.put('/score/appeal/handle', appealHandleForm.value)
+  if (result.data.code === 0) {
+    appealDialogVisible.value = false
+    ElMessage.success('处理成功')
+    getAppeals()
+  } else {
+    ElMessage.error(result.data.message || '处理失败')
   }
 }
 
@@ -182,7 +273,7 @@ const handleDelete = async (index, row) => {
       await getData()
       ElMessage.success("删除成功")
     } else {
-      ElMessage.error("删除失败")
+      ElMessage.error(result.data.message || "删除失败")
     }
   }).catch(() => {})
 }
@@ -202,37 +293,105 @@ const handleDelete = async (index, row) => {
           </div>
         </div>
       </template>
-      <el-table :data="tableData" style="width: 100%" class="glass-table" :scroll-x="false" v-loading="loading" empty-text="暂无数据">
-        <el-table-column prop="scoreId" label="编号" width="70" />
-        <el-table-column prop="studentName" label="学生姓名" width="110" />
-        <el-table-column prop="clazzName" label="班级" width="120" />
-        <el-table-column label="学期" width="150" align="center">
-          <template #default="scope">{{ scope.row.semesterName || '未分学期' }}</template>
-        </el-table-column>
-        <el-table-column prop="courseName" label="课程" width="140" />
-        <el-table-column prop="usual" label="平时" width="80" />
-        <el-table-column prop="mid" label="期中" width="80" />
-        <el-table-column prop="finalScore" label="期末" width="80" />
-        <el-table-column prop="total" label="总评" width="80" />
-        <el-table-column prop="gp" label="绩点" width="70" />
-        <el-table-column label="操作" width="140" fixed="right">
-          <template #default="scope">
-            <el-button size="small" class="btn-glass-edit" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-            <el-button size="small" class="btn-glass-danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <div style="display: flex; justify-content: center; margin-top: 12px;">
-        <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 20, 50]"
-            :total="total"
-            layout="total, sizes, prev, pager, next"
-            class="glass-pagination"
-            @current-change="handlePageChange"
-        />
-      </div>
+
+      <el-tabs v-model="activeTab" @tab-change="switchTab">
+        <el-tab-pane label="成绩管理" name="all">
+          <div class="toolbar">
+            <el-select v-model="statusFilter" placeholder="按状态筛选" clearable style="width: 150px" @change="getData">
+              <el-option label="草稿" :value="0" />
+              <el-option label="待审核" :value="1" />
+              <el-option label="已发布" :value="2" />
+              <el-option label="复核中" :value="3" />
+            </el-select>
+            <div class="toolbar-actions">
+              <el-button size="small" type="primary" plain @click="submitScores()">批量提交</el-button>
+            </div>
+          </div>
+          <el-table :data="tableData" style="width: 100%" class="glass-table" v-loading="loading" empty-text="暂无数据"
+                    @selection-change="v => selectedRows = v">
+            <el-table-column type="selection" width="45" :selectable="row => row.status === 0 || row.status === 1" />
+            <el-table-column prop="scoreId" label="编号" width="70" />
+            <el-table-column prop="studentName" label="学生姓名" width="100" />
+            <el-table-column prop="clazzName" label="班级" width="110" />
+            <el-table-column label="学期" width="140" align="center">
+              <template #default="scope">{{ scope.row.semesterName || '未分学期' }}</template>
+            </el-table-column>
+            <el-table-column prop="courseName" label="课程" width="120" />
+            <el-table-column prop="usual" label="平时" width="70" />
+            <el-table-column prop="mid" label="期中" width="70" />
+            <el-table-column prop="finalScore" label="期末" width="70" />
+            <el-table-column prop="total" label="总评" width="70" />
+            <el-table-column prop="gp" label="绩点" width="65" />
+            <el-table-column label="状态" width="90" align="center">
+              <template #default="scope">
+                <el-tag :type="statusTagType[scope.row.status] || 'info'" size="small">{{ statusMap[scope.row.status] || '未知' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="170" fixed="right">
+              <template #default="scope">
+                <el-button v-if="scope.row.status === 0" size="small" type="warning" plain @click="submitScores([scope.row])">提交</el-button>
+                <el-button v-if="scope.row.status === 1" size="small" type="success" plain @click="publishScores([scope.row])">发布</el-button>
+                <el-button v-if="scope.row.status !== 2 && scope.row.status !== 3" size="small" class="btn-glass-edit" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                <el-button v-if="scope.row.status !== 2 && scope.row.status !== 3" size="small" class="btn-glass-danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div style="display: flex; justify-content: center; margin-top: 12px;">
+            <el-pagination
+                v-model:current-page="currentPage"
+                v-model:page-size="pageSize"
+                :page-sizes="[10, 20, 50]"
+                :total="total"
+                layout="total, sizes, prev, pager, next"
+                class="glass-pagination"
+                @current-change="handlePageChange"
+            />
+          </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="待审核" name="submitted">
+          <div class="toolbar">
+            <span class="toolbar-tip">已提交待发布的成绩</span>
+            <div class="toolbar-actions">
+              <el-button size="small" type="success" plain @click="publishScores()">批量发布</el-button>
+            </div>
+          </div>
+          <el-table :data="tableData" style="width: 100%" class="glass-table" v-loading="loading" empty-text="暂无待审核成绩"
+                    @selection-change="v => selectedRows = v">
+            <el-table-column type="selection" width="45" />
+            <el-table-column prop="scoreId" label="编号" width="70" />
+            <el-table-column prop="studentName" label="学生姓名" width="100" />
+            <el-table-column prop="courseName" label="课程" width="140" />
+            <el-table-column prop="total" label="总评" width="90" />
+            <el-table-column label="操作" width="130" fixed="right">
+              <template #default="scope">
+                <el-button size="small" type="success" plain @click="publishScores([scope.row])">发布</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div style="display: flex; justify-content: center; margin-top: 12px;">
+            <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[10, 20, 50]"
+                           :total="total" layout="total, sizes, prev, pager, next" class="glass-pagination"
+                           @current-change="handlePageChange" />
+          </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="复核申诉" name="appeal">
+          <el-table :data="appealList" style="width: 100%" class="glass-table" v-loading="appealLoading" empty-text="暂无待处理申诉">
+            <el-table-column prop="id" label="编号" width="70" />
+            <el-table-column prop="studentName" label="学生" width="100" />
+            <el-table-column prop="courseName" label="课程" width="140" />
+            <el-table-column prop="total" label="当前总评" width="90" />
+            <el-table-column prop="reason" label="申诉理由" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="createTime" label="申请时间" width="170" />
+            <el-table-column label="操作" width="130" fixed="right">
+              <template #default="scope">
+                <el-button size="small" type="primary" plain @click="openAppealHandle(scope.row)">处理</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+      </el-tabs>
     </el-card>
 
     <el-dialog v-model="dialogFormVisible" title="编辑成绩" width="500" class="glass-dialog">
@@ -316,6 +475,28 @@ const handleDelete = async (index, row) => {
         <el-button type="primary" @click="addConfirm" class="btn-glass-primary">确定</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="appealDialogVisible" title="处理成绩复核" width="460" class="glass-dialog">
+      <el-form :model="appealHandleForm" label-width="90px">
+        <el-form-item label="处理方式">
+          <el-radio-group v-model="appealHandleForm.action">
+            <el-radio value="approve">通过</el-radio>
+            <el-radio value="reject">驳回</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="appealHandleForm.action === 'approve'" label="新总评">
+          <el-input-number v-model="appealHandleForm.newTotal" :min="0" :max="100" :step="0.5" />
+          <span class="form-tip">（留空则维持原分）</span>
+        </el-form-item>
+        <el-form-item label="处理意见">
+          <el-input v-model="appealHandleForm.handleNote" type="textarea" :rows="3" placeholder="选填" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="appealDialogVisible = false" class="btn-glass-outline">取消</el-button>
+        <el-button type="primary" @click="confirmAppealHandle" class="btn-glass-primary">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 <style scoped>
@@ -344,6 +525,27 @@ const handleDelete = async (index, row) => {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+.toolbar-tip {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.form-tip {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: 8px;
 }
 
 /* 玻璃卡片 */
