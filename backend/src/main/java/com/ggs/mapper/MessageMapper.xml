@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ggs.mapper.MessageMapper">
+
+    <insert id="insert" parameterType="com.ggs.pojo.Message" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO message (receiver_type, receiver_id, type, title, content, biz_id, is_read)
+        VALUES (#{receiverType}, #{receiverId}, #{type}, #{title}, #{content}, #{bizId}, 0)
+    </insert>
+
+    <insert id="insertToAllStudents">
+        INSERT INTO message (receiver_type, receiver_id, type, title, content, is_read)
+        SELECT 'student', s.sid, #{type}, #{title}, #{content}, 0
+        FROM student s
+        WHERE s.status = 1
+    </insert>
+
+    <select id="unreadCount" resultType="int">
+        SELECT COUNT(*) FROM message
+        WHERE receiver_type = #{receiverType} AND receiver_id = #{receiverId} AND is_read = 0
+    </select>
+
+    <select id="list" resultType="com.ggs.pojo.Message">
+        SELECT id, receiver_type, receiver_id, type, title, content, biz_id, is_read, create_time
+        FROM message
+        WHERE receiver_type = #{receiverType} AND receiver_id = #{receiverId}
+        ORDER BY id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM message
+        WHERE receiver_type = #{receiverType} AND receiver_id = #{receiverId}
+    </select>
+
+    <update id="markRead">
+        UPDATE message SET is_read = 1
+        WHERE id = #{id} AND receiver_type = #{receiverType} AND receiver_id = #{receiverId}
+    </update>
+
+    <update id="markAllRead">
+        UPDATE message SET is_read = 1
+        WHERE receiver_type = #{receiverType} AND receiver_id = #{receiverId} AND is_read = 0
+    </update>
+
+</mapper>

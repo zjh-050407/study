@@ -28,4 +28,7 @@ public interface SelectionApplyMapper {
                      @Param("approveTime") LocalDateTime approveTime);
 
     int countSelection(@Param("sid") Integer sid, @Param("courseId") Integer courseId);
+
+    /** 待审批数量（待办聚合用） */
+    int countPending();
 }

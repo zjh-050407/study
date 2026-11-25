@@ -1,8 +1,10 @@
 package com.ggs.service;
 
 import com.ggs.exception.BusinessException;
+import com.ggs.mapper.CourseMapper;
 import com.ggs.mapper.CourseSelectionMapper;
 import com.ggs.mapper.SelectionApplyMapper;
+import com.ggs.pojo.Course;
 import com.ggs.pojo.CourseSelection;
 import com.ggs.pojo.SelectionApply;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,20 @@ public class SelectionApplyServiceImpl implements SelectionApplyService {
     @Autowired
     private SelectionQuotaService quotaService;
 
+    @Autowired
+    private MessageService messageService;
+
+    @Autowired
+    private CourseMapper courseMapper;
+
+    private String courseName(Integer courseId) {
+        if (courseId == null) {
+            return "未知课程";
+        }
+        Course course = courseMapper.getById(courseId);
+        return course == null || course.getName() == null ? String.valueOf(courseId) : course.getName();
+    }
+
     @Override
     public void apply(Integer sid, Integer courseId, String reason) {
         if (sid == null || courseId == null) {
@@ -42,6 +58,11 @@ public class SelectionApplyServiceImpl implements SelectionApplyService {
         apply.setStatus(0);
         apply.setApplyTime(LocalDateTime.now());
         applyMapper.insert(apply);
+        // 消息埋点：通知管理员与教授有待审批退选申请
+        String title = "新的退选申请待审批";
+        String content = "学生学号 " + sid + " 申请退选《" + courseName(courseId) + "》";
+        messageService.sendToRole("admin", "approval", title, content, apply.getId().longValue());
+        messageService.sendToRole("professor", "approval", title, content, apply.getId().longValue());
     }
 
     @Override
@@ -73,6 +94,8 @@ public class SelectionApplyServiceImpl implements SelectionApplyService {
             quotaService.release(target.getSid(), target.getCourseId(), target.getSemesterId());
         }
         applyMapper.updateStatus(id, 1, approveUid, LocalDateTime.now());
+        messageService.send("student", apply.getSid().longValue(), "approval",
+                "退选申请已通过", "你申请退选的《" + courseName(apply.getCourseId()) + "》已通过审批", apply.getId().longValue());
     }
 
     @Override
@@ -85,5 +108,7 @@ public class SelectionApplyServiceImpl implements SelectionApplyService {
             throw new BusinessException("该申请已处理，请勿重复审批");
         }
         applyMapper.updateStatus(id, 2, approveUid, LocalDateTime.now());
+        messageService.send("student", apply.getSid().longValue(), "approval",
+                "退选申请被拒绝", "你申请退选的《" + courseName(apply.getCourseId()) + "》未通过审批", apply.getId().longValue());
     }
 }

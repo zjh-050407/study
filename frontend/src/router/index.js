@@ -31,6 +31,10 @@ import AnalyticsDashboard from "@/components/AnalyticsDashboard.vue";
 import StuExam from "@/components/StuExam.vue";
 import TrainingPlanManager from "@/components/TrainingPlanManager.vue";
 import StatusChangeManager from "@/components/StatusChangeManager.vue";
+import MessageCenter from "@/components/MessageCenter.vue";
+import CalendarManager from "@/components/CalendarManager.vue";
+import TeacherSchedule from "@/components/TeacherSchedule.vue";
+import ClassroomSchedule from "@/components/ClassroomSchedule.vue";
 import { ElMessage } from 'element-plus'
 
 const routeRoleMap = {
@@ -48,6 +52,9 @@ const routeRoleMap = {
   '/home/analytics': ['professor', 'admin'],
   '/home/trainingPlan': ['professor', 'admin'],
   '/home/statusChange': ['professor', 'admin'],
+  '/home/calendar': ['professor', 'admin'],
+  '/home/classroomSchedule': ['professor', 'admin'],
+  '/home/mySchedule': ['lecturer', 'professor', 'admin'],
 }
 
 const routes = [
@@ -85,6 +92,10 @@ const routes = [
             { path: "analytics", component: AnalyticsDashboard },
             { path: "trainingPlan", component: TrainingPlanManager },
             { path: "statusChange", component: StatusChangeManager },
+            { path: "message", component: MessageCenter },
+            { path: "calendar", component: CalendarManager },
+            { path: "mySchedule", component: TeacherSchedule },
+            { path: "classroomSchedule", component: ClassroomSchedule },
         ]
     },
     {
@@ -93,6 +104,7 @@ const routes = [
         redirect: "/stu/notice",
         children: [
             { path: "notice", component: NoticeManager },
+            { path: "message", component: MessageCenter },
             { path: "schedule", component: MySchedule },
             { path: "score", component: MyScore },
             { path: "selection", component: CourseSelectionSelf },

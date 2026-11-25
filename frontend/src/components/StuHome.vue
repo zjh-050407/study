@@ -14,6 +14,7 @@ import {
 } from '@element-plus/icons-vue'
 import { useRouter } from "vue-router";
 import request from "@/utils/request.js";
+import MessageBell from "@/components/MessageBell.vue";
 
 const router = useRouter()
 const username = ref("")
@@ -54,6 +55,7 @@ const handleCommand = async (command) => {
           <span class="system-title">高校教务管理系统 · 学生端</span>
         </div>
         <div class="header-right">
+          <MessageBell center-path="/stu/message" />
           <span class="welcome-text">欢迎，<em class="welcome-user">{{ username }}</em><span class="sid-tag">学号 {{ sid }}</span></span>
           <el-dropdown @command="handleCommand">
             <span class="el-dropdown-link">
@@ -82,6 +84,10 @@ const handleCommand = async (command) => {
             <el-menu-item index="/stu/notice">
               <el-icon><Bell /></el-icon>
               <span>公告通知</span>
+            </el-menu-item>
+            <el-menu-item index="/stu/message">
+              <el-icon><Bell /></el-icon>
+              <span>消息中心</span>
             </el-menu-item>
             <el-menu-item index="/stu/schedule">
               <el-icon><Calendar /></el-icon>

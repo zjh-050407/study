@@ -18,4 +18,7 @@ public interface RegisterRequestMapper {
     RegisterRequest selectById(@Param("id") Integer id);
 
     int updateStatus(@Param("id") Integer id, @Param("status") String status);
+
+    /** 待审批数量（待办聚合用） */
+    int countPending();
 }

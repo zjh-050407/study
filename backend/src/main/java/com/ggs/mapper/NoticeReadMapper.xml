@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ggs.mapper.NoticeReadMapper">
+
+    <select id="getLastId" resultType="long">
+        SELECT last_notice_id FROM user_notice_read WHERE user_key = #{userKey}
+    </select>
+
+    <insert id="upsert">
+        INSERT INTO user_notice_read (user_key, last_notice_id)
+        VALUES (#{userKey}, #{lastNoticeId})
+        ON DUPLICATE KEY UPDATE last_notice_id = GREATEST(last_notice_id, VALUES(last_notice_id))
+    </insert>
+
+</mapper>

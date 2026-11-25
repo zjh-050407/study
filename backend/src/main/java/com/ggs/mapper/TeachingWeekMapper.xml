@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ggs.mapper.TeachingWeekMapper">
+
+    <select id="list" resultType="com.ggs.pojo.TeachingWeek">
+        SELECT id, semester_id, week_no, start_date, end_date, note
+        FROM teaching_week
+        WHERE semester_id = #{semesterId}
+        ORDER BY week_no
+    </select>
+
+    <select id="getById" resultType="com.ggs.pojo.TeachingWeek">
+        SELECT id, semester_id, week_no, start_date, end_date, note
+        FROM teaching_week
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.ggs.pojo.TeachingWeek" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO teaching_week (semester_id, week_no, start_date, end_date, note)
+        VALUES (#{semesterId}, #{weekNo}, #{startDate}, #{endDate}, #{note})
+    </insert>
+
+    <update id="update" parameterType="com.ggs.pojo.TeachingWeek">
+        UPDATE teaching_week
+        SET week_no = #{weekNo}, start_date = #{startDate}, end_date = #{endDate}, note = #{note}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM teaching_week WHERE id = #{id}
+    </delete>
+
+</mapper>

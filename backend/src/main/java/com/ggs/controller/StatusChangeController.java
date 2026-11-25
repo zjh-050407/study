@@ -3,6 +3,7 @@ package com.ggs.controller;
 import com.ggs.annotation.OperationLogAnnotation;
 import com.ggs.interceptor.JwtInterceptor;
 import com.ggs.pojo.StatusChange;
+import com.ggs.service.MessageService;
 import com.ggs.service.StatusChangeService;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
@@ -16,12 +17,18 @@ public class StatusChangeController {
     @Autowired
     private StatusChangeService statusChangeService;
 
+    @Autowired
+    private MessageService messageService;
+
     @OperationLogAnnotation("学籍异动登记")
     @PostMapping
     public ResultVO register(@RequestBody StatusChange change) {
         RoleCheckUtil.requireRole("professor", "admin");
         Long uid = JwtInterceptor.UID_HOLDER.get();
         statusChangeService.register(change, uid == null ? null : uid.intValue());
+        // 消息埋点：通知学生学籍异动
+        messageService.send("student", change.getSid() == null ? null : change.getSid().longValue(),
+                "system", "学籍异动通知", "你的学籍状态发生变更：" + change.getType(), null);
         return ResultVO.success();
     }
 

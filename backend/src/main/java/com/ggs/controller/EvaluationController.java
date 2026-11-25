@@ -5,6 +5,7 @@ import com.ggs.interceptor.JwtInterceptor;
 import com.ggs.pojo.EvaluationRecord;
 import com.ggs.pojo.EvaluationTask;
 import com.ggs.service.EvaluationService;
+import com.ggs.service.MessageService;
 import com.ggs.util.RoleCheckUtil;
 import com.ggs.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ public class EvaluationController {
     @Autowired
     private EvaluationService evaluationService;
 
+    @Autowired
+    private MessageService messageService;
+
     /* ==================== 教师/管理员：任务管理 ==================== */
 
     @OperationLogAnnotation("发起评教任务")
@@ -24,6 +28,9 @@ public class EvaluationController {
     public ResultVO createTask(@RequestBody EvaluationTask task) {
         RoleCheckUtil.requireRole("professor", "admin");
         evaluationService.createTask(task);
+        // 消息埋点：提醒所有在校学生参与评教
+        messageService.sendToAllStudents("notice", "评教任务已开启",
+                "新的教学评价任务已开启，请登录学生端及时完成评教");
         return ResultVO.success();
     }
 

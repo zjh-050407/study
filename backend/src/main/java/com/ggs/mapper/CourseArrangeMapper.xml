@@ -80,4 +80,32 @@
           AND (classroom = #{classroom} OR tid = #{tid})
     </select>
 
+    <select id="listGridByTeacher" resultType="map">
+        SELECT a.week_day AS weekDay, a.section,
+               a.start_week AS startWeek, a.end_week AS endWeek, a.week_type AS weekType,
+               c.name AS courseName, t.name AS teacherName, a.classroom, a.tid
+        FROM course_arrange a
+        JOIN course c ON c.course_id = a.course_id
+        LEFT JOIN teacher t ON t.tid = a.tid
+        WHERE a.tid = #{tid}
+        <if test="semesterId != null">
+          AND (a.semester_id = #{semesterId} OR a.semester_id IS NULL)
+        </if>
+        ORDER BY a.week_day, a.section
+    </select>
+
+    <select id="listGridByClassroom" resultType="map">
+        SELECT a.week_day AS weekDay, a.section,
+               a.start_week AS startWeek, a.end_week AS endWeek, a.week_type AS weekType,
+               c.name AS courseName, t.name AS teacherName, a.classroom, a.tid
+        FROM course_arrange a
+        JOIN course c ON c.course_id = a.course_id
+        LEFT JOIN teacher t ON t.tid = a.tid
+        WHERE a.classroom = #{classroom}
+        <if test="semesterId != null">
+          AND (a.semester_id = #{semesterId} OR a.semester_id IS NULL)
+        </if>
+        ORDER BY a.week_day, a.section
+    </select>
+
 </mapper>

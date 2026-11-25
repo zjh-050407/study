@@ -17,4 +17,10 @@ public interface NoticeMapper {
     int countAll();
 
     List<Notice> listLatest(@Param("limit") int limit);
+
+    /** 最新公告ID（已发布），未读公告角标用 */
+    Long selectMaxPublishedId();
+
+    /** 统计 ID 大于 afterId 的已发布公告数 */
+    int countPublishedAfter(@Param("afterId") Long afterId);
 }

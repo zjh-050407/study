@@ -22,4 +22,7 @@ public interface AdminMapper {
     Long selectMaxUid();
 
     int insertNextUid(Admin admin);
+
+    /** 按角色列出账号（消息群发用） */
+    java.util.List<Admin> listByRole(@Param("role") String role);
 }

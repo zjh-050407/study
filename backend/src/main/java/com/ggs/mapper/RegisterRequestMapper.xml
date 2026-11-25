@@ -42,4 +42,8 @@
         UPDATE register_request SET status = #{status} WHERE id = #{id}
     </update>
 
+    <select id="countPending" resultType="int">
+        SELECT COUNT(*) FROM register_request WHERE status = 'pending'
+    </select>
+
 </mapper>

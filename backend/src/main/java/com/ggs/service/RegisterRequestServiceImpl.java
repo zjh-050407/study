@@ -20,6 +20,9 @@ public class RegisterRequestServiceImpl implements RegisterRequestService {
     @Autowired
     private AdminMapper adminMapper;
 
+    @Autowired
+    private MessageService messageService;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
@@ -60,6 +63,13 @@ public class RegisterRequestServiceImpl implements RegisterRequestService {
         admin.setPassword(request.getPassword());
         admin.setRole(request.getRole());
         adminMapper.insertNextUid(admin);
+
+        // 消息埋点：审批通过后给新账号发欢迎消息
+        Admin created = adminMapper.findByUsername(request.getUsername());
+        if (created != null) {
+            messageService.send("admin", created.getUid(), "system",
+                    "账号审批通过", "欢迎加入高校教务管理系统，你的角色为：" + request.getRole(), null);
+        }
     }
 
     @Override

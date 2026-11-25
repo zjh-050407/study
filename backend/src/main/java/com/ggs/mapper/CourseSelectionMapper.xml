@@ -109,6 +109,7 @@
 
     <select id="listScheduleSlots" resultType="map">
         SELECT a.week_day AS weekDay, a.section,
+               a.start_week AS startWeek, a.end_week AS endWeek, a.week_type AS weekType,
                c.name AS courseName, t.name AS teacherName, a.classroom
         FROM course_selection cs
         JOIN course_arrange a ON a.course_id = cs.course_id

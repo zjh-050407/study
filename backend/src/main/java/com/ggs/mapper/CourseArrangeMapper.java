@@ -26,4 +26,12 @@ public interface CourseArrangeMapper {
                       @Param("weekDay") Integer weekDay,
                       @Param("section") Integer section,
                       @Param("tid") Integer tid);
+
+    /** 教师课表 grid（批次M） */
+    java.util.List<java.util.Map<String, Object>> listGridByTeacher(@Param("tid") Integer tid,
+                                                                   @Param("semesterId") Integer semesterId);
+
+    /** 教室课表 grid（批次M） */
+    java.util.List<java.util.Map<String, Object>> listGridByClassroom(@Param("classroom") String classroom,
+                                                                     @Param("semesterId") Integer semesterId);
 }

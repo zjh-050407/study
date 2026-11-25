@@ -21,13 +21,15 @@ import {
   Switch,
   House,
   Aim,
-  DataAnalysis
+  DataAnalysis,
+  Calendar
 } from '@element-plus/icons-vue'
 import { ref, onMounted } from "vue"
 import { ElMessage } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { useRouter } from "vue-router";
 import request from "@/utils/request.js";
+import MessageBell from "@/components/MessageBell.vue";
 
 const router = useRouter()
 const username = ref("")
@@ -71,6 +73,7 @@ const handleCommand = async (command) => {
           <span class="system-title">高校教务管理系统</span>
         </div>
         <div class="header-right">
+          <MessageBell center-path="/home/message" />
           <span class="welcome-text">欢迎，<em class="welcome-user">{{ username }}</em><span v-if="role" class="role-tag">{{ roleLabel[role] || role }}</span></span>
           <el-dropdown @command="handleCommand">
             <span class="el-dropdown-link">
@@ -110,6 +113,10 @@ const handleCommand = async (command) => {
               <el-menu-item index="/home/clazz">班级管理</el-menu-item>
               <el-menu-item index="/home/studentManager">学生管理</el-menu-item>
               <el-menu-item index="/home/t2" v-if="role === 'professor' || role === 'admin'">教师管理</el-menu-item>
+              <el-menu-item index="/home/calendar" v-if="role === 'professor' || role === 'admin'">
+                <el-icon><Calendar /></el-icon>
+                <span>校历管理</span>
+              </el-menu-item>
             </el-sub-menu>
             <el-sub-menu index="2">
               <template #title>
@@ -123,6 +130,14 @@ const handleCommand = async (command) => {
               <el-menu-item index="/home/course">课程管理</el-menu-item>
               <el-menu-item index="/home/semester" v-if="role === 'professor' || role === 'admin'">学期管理</el-menu-item>
               <el-menu-item index="/home/courseArrange">排课管理</el-menu-item>
+              <el-menu-item index="/home/mySchedule" v-if="role !== 'student'">
+                <el-icon><Calendar /></el-icon>
+                <span>我的课表</span>
+              </el-menu-item>
+              <el-menu-item index="/home/classroomSchedule" v-if="role === 'professor' || role === 'admin'">
+                <el-icon><House /></el-icon>
+                <span>教室课表</span>
+              </el-menu-item>
               <el-menu-item index="/home/courseSelection">
                 <el-icon><Reading /></el-icon>
                 <span>选课管理</span>
@@ -176,6 +191,10 @@ const handleCommand = async (command) => {
             <el-menu-item index="/home/notice">
               <el-icon><Bell /></el-icon>
               <span>公告管理</span>
+            </el-menu-item>
+            <el-menu-item index="/home/message">
+              <el-icon><Bell /></el-icon>
+              <span>消息中心</span>
             </el-menu-item>
             <el-menu-item index="/home/t3">
               <el-icon><Stamp /></el-icon>

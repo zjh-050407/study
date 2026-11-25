@@ -48,4 +48,8 @@
         VALUES ((SELECT COALESCE(MAX(uid), 0) + 1 FROM admin tmp), #{username}, #{password}, #{avatar}, #{role})
     </insert>
 
+    <select id="listByRole" resultMap="adminMap">
+        SELECT uid, username, password, avatar, role FROM admin WHERE role = #{role}
+    </select>
+
 </mapper>
