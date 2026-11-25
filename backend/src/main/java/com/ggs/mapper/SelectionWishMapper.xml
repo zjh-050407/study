@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ggs.mapper.SelectionWishMapper">
+
+    <delete id="deleteByRoundAndSid">
+        DELETE FROM selection_wish WHERE round_id = #{roundId} AND sid = #{sid}
+    </delete>
+
+    <insert id="insert" parameterType="com.ggs.pojo.SelectionWish" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO selection_wish (round_id, sid, course_id, priority)
+        VALUES (#{roundId}, #{sid}, #{courseId}, #{priority})
+    </insert>
+
+    <select id="listByRoundAndSid" resultType="com.ggs.pojo.SelectionWish">
+        SELECT w.id, w.round_id, w.sid, w.course_id, w.priority, w.create_time,
+               c.name AS courseName, c.capacity,
+               (SELECT COUNT(*) FROM course_selection cs WHERE cs.course_id = w.course_id) AS selectedCount
+        FROM selection_wish w
+        LEFT JOIN course c ON c.course_id = w.course_id
+        WHERE w.round_id = #{roundId} AND w.sid = #{sid}
+        ORDER BY w.priority
+    </select>
+
+    <select id="listByRound" resultType="com.ggs.pojo.SelectionWish">
+        SELECT w.id, w.round_id, w.sid, w.course_id, w.priority, w.create_time,
+               c.name AS courseName
+        FROM selection_wish w
+        LEFT JOIN course c ON c.course_id = w.course_id
+        WHERE w.round_id = #{roundId}
+        ORDER BY w.priority, w.create_time
+    </select>
+
+</mapper>

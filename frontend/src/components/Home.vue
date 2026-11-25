@@ -142,6 +142,10 @@ const handleCommand = async (command) => {
                 <el-icon><Reading /></el-icon>
                 <span>选课管理</span>
               </el-menu-item>
+              <el-menu-item index="/home/selectionRound" v-if="role === 'professor' || role === 'admin'">
+                <el-icon><Reading /></el-icon>
+                <span>选课轮次</span>
+              </el-menu-item>
               <el-menu-item index="/home/score">成绩管理</el-menu-item>
               <el-menu-item index="/home/scoreWarning">
                 <el-icon><WarningFilled /></el-icon>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ggs.mapper.SelectionRoundMapper">
+
+    <insert id="insert" parameterType="com.ggs.pojo.SelectionRound" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO selection_round (semester_id, name, type, status, start_time, end_time, max_wishes)
+        VALUES (#{semesterId}, #{name}, #{type}, #{status}, #{startTime}, #{endTime}, #{maxWishes})
+    </insert>
+
+    <select id="getById" resultType="com.ggs.pojo.SelectionRound">
+        SELECT id, semester_id, name, type, status, start_time, end_time, max_wishes, create_time
+        FROM selection_round WHERE id = #{id}
+    </select>
+
+    <select id="list" resultType="com.ggs.pojo.SelectionRound">
+        SELECT id, semester_id, name, type, status, start_time, end_time, max_wishes, create_time
+        FROM selection_round
+        WHERE semester_id = #{semesterId}
+        ORDER BY id DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE selection_round SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <select id="findRunning" resultType="com.ggs.pojo.SelectionRound">
+        SELECT id, semester_id, name, type, status, start_time, end_time, max_wishes, create_time
+        FROM selection_round
+        WHERE type = #{type} AND status = 1
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <select id="countRunningByType" resultType="int">
+        SELECT COUNT(*) FROM selection_round
+        WHERE type = #{type} AND status = 1 AND semester_id = #{semesterId}
+    </select>
+
+</mapper>

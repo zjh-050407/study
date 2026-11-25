@@ -152,8 +152,15 @@ public class CourseSelectionServiceImpl implements CourseSelectionService {
     }
 
     @Override
-    public void delete(Integer id) {
-        if (id == null) {
+    public boolean hasSelected(Integer sid, Integer courseId) {
+        if (sid == null || courseId == null) {
+            return false;
+        }
+        return selectionMapper.countBySidAndCourse(sid, courseId) > 0;
+    }
+
+    @Override
+    public void delete(Integer id) {        if (id == null) {
             throw new BusinessException("删除失败，选课记录不存在");
         }
         CourseSelection exist = selectionMapper.getById(id);

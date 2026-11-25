@@ -14,6 +14,9 @@ public interface CourseSelectionService {
 
     void delete(Integer id);
 
+    /** 学生是否已选某课程（批次O：自助选课轮次校验的兼容提示用） */
+    boolean hasSelected(Integer sid, Integer courseId);
+
     /** 课程列表（带该学生是否已选标记） */
     List<Map<String, Object>> listCourseOptions(Integer sid);
 

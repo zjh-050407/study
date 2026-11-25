@@ -1,6 +1,6 @@
 <script setup>
 import request from "@/utils/request.js";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { ElMessage } from 'element-plus'
 
 const activeTab = ref('courses')
@@ -8,6 +8,14 @@ const courseList = ref([])
 const mySelections = ref([])
 const myApplies = ref([])
 const loading = ref(false)
+
+// 批次O：选课轮次
+const roundInfo = ref({ first: null, second: null })
+const wishList = ref([])
+const wishPick = ref([])   // 正在挑选的志愿课程（有序）
+
+const firstRound = computed(() => roundInfo.value.first)
+const secondRound = computed(() => roundInfo.value.second)
 
 const applyDialogVisible = ref(false)
 const applyCourse = ref(null)
@@ -18,7 +26,8 @@ const getCourses = async () => {
   try {
     const result = await request.get('/selection/self/courses')
     if (result.data.code === 0) {
-      courseList.value = result.data.data || []
+      roundInfo.value = result.data.data.round || { first: null, second: null }
+      courseList.value = result.data.data.list || []
     }
   } catch (err) {
     console.error('获取课程失败:', err)
@@ -41,10 +50,27 @@ const getMyApplies = async () => {
   }
 }
 
-const refreshAll = async () => {
-  await Promise.all([getCourses(), getMySelections(), getMyApplies()])
+const getMyWishes = async () => {
+  if (!firstRound.value) {
+    wishList.value = []
+    return
+  }
+  try {
+    const result = await request.get('/selection/wish/my', { params: { roundId: firstRound.value.id } })
+    if (result.data.code === 0) {
+      wishList.value = result.data.data || []
+      // 同步已提交志愿到挑选区
+      wishPick.value = wishList.value.map(w => courseList.value.find(c => c.courseId === w.courseId)).filter(Boolean)
+    }
+  } catch (e) {}
 }
 
+const refreshAll = async () => {
+  await Promise.all([getCourses(), getMySelections(), getMyApplies()])
+  await getMyWishes()
+}
+
+/* ---- 补退选：即时选课 ---- */
 const selectCourse = async (course) => {
   const result = await request.post('/selection/self', { courseId: course.courseId })
   if (result.data.code === 0) {
@@ -52,6 +78,56 @@ const selectCourse = async (course) => {
     await refreshAll()
   } else {
     ElMessage.error(result.data.message || '选课失败')
+  }
+}
+
+/* ---- 初选：志愿挑选与提交 ---- */
+const maxWishes = computed(() => {
+  const m = firstRound.value?.maxWishes
+  return m || 3
+})
+
+const toggleWish = (course) => {
+  const idx = wishPick.value.findIndex(c => c.courseId === course.courseId)
+  if (idx >= 0) {
+    wishPick.value.splice(idx, 1)
+  } else {
+    if (wishPick.value.length >= maxWishes.value) {
+      ElMessage.warning(`志愿最多 ${maxWishes.value} 门，请先移除其他志愿`)
+      return
+    }
+    wishPick.value.push(course)
+  }
+}
+
+const wishIndex = (courseId) => {
+  const idx = wishPick.value.findIndex(c => c.courseId === courseId)
+  return idx >= 0 ? idx + 1 : 0
+}
+
+const moveWish = (idx, dir) => {
+  const target = idx + dir
+  if (target < 0 || target >= wishPick.value.length) return
+  const arr = wishPick.value
+  const tmp = arr[idx]
+  arr[idx] = arr[target]
+  arr[target] = tmp
+}
+
+const submitWishes = async () => {
+  if (wishPick.value.length === 0) {
+    ElMessage.warning('请先挑选志愿课程')
+    return
+  }
+  const result = await request.post('/selection/wish', {
+    roundId: firstRound.value.id,
+    courseIds: wishPick.value.map(c => c.courseId),
+  })
+  if (result.data.code === 0) {
+    ElMessage.success('志愿已提交，轮次结束后统一投档')
+    await getMyWishes()
+  } else {
+    ElMessage.error(result.data.message || '提交失败')
   }
 }
 
@@ -100,6 +176,37 @@ onMounted(refreshAll)
 <template>
   <div class="selection-page">
     <el-card class="glass-card" shadow="never">
+      <!-- 批次O：轮次状态条 -->
+      <div class="round-banner">
+        <template v-if="firstRound">
+          <el-alert type="primary" :closable="false" show-icon
+                    :title="`「${firstRound.name}」进行中：请挑选最多 ${maxWishes} 门志愿课程并提交，轮次结束后统一投档`" />
+        </template>
+        <template v-else-if="secondRound">
+          <el-alert type="success" :closable="false" show-icon
+                    :title="`「${secondRound.name}」进行中：先到先得，可直接选课`" />
+        </template>
+        <template v-else>
+          <el-alert type="warning" :closable="false" show-icon
+                    title="当前不在选课时间（无进行中的选课轮次），无法自助选课" />
+        </template>
+      </div>
+
+      <!-- 初选：志愿挑选区 -->
+      <div v-if="firstRound" class="wish-bar">
+        <div class="wish-pick">
+          <span class="wish-label">我的志愿（按优先级排序）：</span>
+          <el-tag v-for="(c, i) in wishPick" :key="c.courseId" class="wish-tag" type="warning" closable
+                  @close="toggleWish(c)">
+            {{ i + 1 }}. {{ c.name }}
+            <el-button link size="small" @click.stop="moveWish(i, -1)" :disabled="i === 0">↑</el-button>
+            <el-button link size="small" @click.stop="moveWish(i, 1)" :disabled="i === wishPick.length - 1">↓</el-button>
+          </el-tag>
+          <span v-if="wishPick.length === 0" class="wish-empty">尚未挑选志愿</span>
+        </div>
+        <el-button type="primary" size="small" @click="submitWishes">提交志愿</el-button>
+      </div>
+
       <el-tabs v-model="activeTab" class="glass-tabs">
         <el-tab-pane label="全部课程" name="courses">
           <el-table :data="courseList" class="glass-table" v-loading="loading" empty-text="暂无课程">
@@ -119,15 +226,36 @@ onMounted(refreshAll)
             <el-table-column label="任课教师" min-width="120" align="center">
               <template #default="scope">{{ scope.row.teacherNames || '-' }}</template>
             </el-table-column>
-            <el-table-column label="操作" width="120" fixed="right" align="center">
+            <el-table-column label="操作" width="140" fixed="right" align="center">
               <template #default="scope">
-                <el-button
-                    size="small"
-                    class="btn-glass-edit"
-                    :disabled="Number(scope.row.selected) > 0 || isFull(scope.row)"
-                    @click="selectCourse(scope.row)"
-                >{{ Number(scope.row.selected) > 0 ? '已选' : (isFull(scope.row) ? '已满' : '选课') }}</el-button>
+                <!-- 初选：挑选志愿 -->
+                <el-button v-if="firstRound" size="small" class="btn-glass-edit"
+                           :disabled="Number(scope.row.selected) > 0"
+                           @click="toggleWish(scope.row)">
+                  {{ wishIndex(scope.row.courseId) > 0 ? `志愿${wishIndex(scope.row.courseId)}` : '加志愿' }}
+                </el-button>
+                <!-- 补退选：即时抢课 -->
+                <el-button v-else size="small" class="btn-glass-edit"
+                           :disabled="!secondRound || Number(scope.row.selected) > 0 || isFull(scope.row)"
+                           @click="selectCourse(scope.row)">
+                  {{ Number(scope.row.selected) > 0 ? '已选' : (isFull(scope.row) ? '已满' : '选课') }}
+                </el-button>
               </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane v-if="firstRound" label="我的志愿" name="wishes">
+          <el-table :data="wishList" class="glass-table" empty-text="尚未提交志愿">
+            <el-table-column prop="priority" label="志愿序" width="80" align="center">
+              <template #default="scope">第 {{ scope.row.priority }} 志愿</template>
+            </el-table-column>
+            <el-table-column prop="courseName" label="课程" min-width="160" show-overflow-tooltip />
+            <el-table-column label="已选/容量" width="130" align="center">
+              <template #default="scope">{{ scope.row.selectedCount }} / {{ scope.row.capacity }}</template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="提交时间" width="170" align="center">
+              <template #default="scope">{{ scope.row.createTime ? String(scope.row.createTime).replace('T', ' ').slice(0, 19) : '-' }}</template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
@@ -221,6 +349,40 @@ onMounted(refreshAll)
 }
 .tip-alert {
   margin-bottom: 12px;
+}
+.round-banner {
+  margin-bottom: 12px;
+}
+.wish-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px dashed var(--blue-300);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: rgba(74, 144, 226, 0.05);
+  flex-wrap: wrap;
+}
+.wish-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.wish-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.wish-tag {
+  font-size: 12px;
+}
+.wish-empty {
+  font-size: 12px;
+  color: var(--text-muted);
 }
 :deep(.glass-table) {
   --el-table-header-bg-color: rgba(220, 240, 255, 0.5);

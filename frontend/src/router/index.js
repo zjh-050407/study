@@ -36,6 +36,7 @@ import CalendarManager from "@/components/CalendarManager.vue";
 import TeacherSchedule from "@/components/TeacherSchedule.vue";
 import ClassroomSchedule from "@/components/ClassroomSchedule.vue";
 import PrintCertificate from "@/components/PrintCertificate.vue";
+import SelectionRoundManager from "@/components/SelectionRoundManager.vue";
 import { ElMessage } from 'element-plus'
 
 const routeRoleMap = {
@@ -56,6 +57,7 @@ const routeRoleMap = {
   '/home/calendar': ['professor', 'admin'],
   '/home/classroomSchedule': ['professor', 'admin'],
   '/home/mySchedule': ['lecturer', 'professor', 'admin'],
+  '/home/selectionRound': ['professor', 'admin'],
 }
 
 const routes = [
@@ -97,6 +99,7 @@ const routes = [
             { path: "calendar", component: CalendarManager },
             { path: "mySchedule", component: TeacherSchedule },
             { path: "classroomSchedule", component: ClassroomSchedule },
+            { path: "selectionRound", component: SelectionRoundManager },
         ]
     },
     {
